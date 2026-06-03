@@ -1085,7 +1085,7 @@
     }
 
     .service-name {
-      text-transform: lowercase;
+      text-transform: uppercase;
       font-family: var(--font-body);
       font-size: 16px;
       font-weight: 700;
@@ -2594,6 +2594,45 @@
     </div>
   </section>
 
+  <!-- ════════════════════════════ PORTFOLIO ════════════════════════════ -->
+  <section id="portafolio">
+    <div class="portfolio-top-fade"></div>
+    <div class="portfolio-bottom-fade"></div>
+
+    <!-- bg glows -->
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:900px;height:900px;background:radial-gradient(circle,rgba(220,38,38,0.025) 0%,transparent 65%);filter:blur(80px);pointer-events:none;animation:glow-breathe 8s ease-in-out infinite;"></div>
+
+    <div class="container">
+      <div class="portfolio-header reveal">
+        <div class="section-label">Nuestro Trabajo</div>
+        <h2 class="section-title">NUESTRO <span class="accent">PORTAFOLIO</span></h2>
+        <p class="section-subtitle">Cada corte cuenta una historia. Descubre tu próximo estilo.</p>
+        <div class="section-sep"></div>
+      </div>
+
+      <!-- Carousel -->
+      <div class="carousel-wrap reveal-scale">
+        <div class="carousel-main" id="carousel">
+          <!-- Slides injected by JS -->
+        </div>
+
+        <!-- Navigation -->
+        <button class="carousel-nav-btn carousel-prev" id="carousel-prev" aria-label="Anterior">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button class="carousel-nav-btn carousel-next" id="carousel-next" aria-label="Siguiente">
+          <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+
+        <!-- Dots -->
+        <div class="carousel-dots" id="carousel-dots"></div>
+
+        <!-- Thumbnails -->
+        <div class="carousel-thumbs" id="carousel-thumbs"></div>
+      </div>
+    </div>
+  </section>
+
   <!-- ════════════════════════════ SERVICES ════════════════════════════ -->
   <section id="servicios">
     <!-- bg glows -->
@@ -2610,11 +2649,11 @@
 
       <div class="services-grid">
         <!-- Card 1 -->
-        <div class="service-card reveal" style="transition-delay:0.1s" onclick="openWA('CORTE + CEJAS')">
+        <div class="service-card reveal" style="transition-delay:0.1s" onclick="openWA('CORTE + CEJA')">
           <div class="service-icon-wrap">
             <svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
           </div>
-          <div class="service-name">CORTE + CEJAS</div>
+          <div class="service-name">CORTE + CEJA</div>
           <p class="service-desc">Corte profesional con perfilado de cejas incluido. Acabado impecable.</p>
           <div class="service-footer">
             <span class="service-price">$20.000</span>
@@ -2623,12 +2662,12 @@
         </div>
 
         <!-- Card 2 -->
-        <div class="service-card reveal" style="transition-delay:0.18s" onclick="openWA('PREMIUM')">
+        <div class="service-card reveal" style="transition-delay:0.18s" onclick="openWA('CORTE + CEJA + MASCARILLA + PIGMENTACIÓN')">
           <div class="service-icon-wrap">
             <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
           </div>
-          <div class="service-name">PREMIUM</div>
-          <p class="service-desc">Corte premium con lavado, masaje y productos de alta gama.</p>
+          <div class="service-name">CORTE + CEJA + MASCARILLA + PIGMENTACIÓN</div>
+          <p class="service-desc">Paquete completo con corte, cejas, mascarilla facial y pigmentación premium.</p>
           <div class="service-footer">
             <span class="service-price">$23.000</span>
             <span class="service-cta">Reservar</span>
@@ -2690,45 +2729,6 @@
     </div>
   </section>
 
-  <!-- ════════════════════════════ PORTFOLIO ════════════════════════════ -->
-  <section id="portafolio">
-    <div class="portfolio-top-fade"></div>
-    <div class="portfolio-bottom-fade"></div>
-
-    <!-- bg glows -->
-    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:900px;height:900px;background:radial-gradient(circle,rgba(220,38,38,0.025) 0%,transparent 65%);filter:blur(80px);pointer-events:none;animation:glow-breathe 8s ease-in-out infinite;"></div>
-
-    <div class="container">
-      <div class="portfolio-header reveal">
-        <div class="section-label">Nuestro Trabajo</div>
-        <h2 class="section-title">NUESTRO <span class="accent">PORTAFOLIO</span></h2>
-        <p class="section-subtitle">Cada corte cuenta una historia. Descubre tu próximo estilo.</p>
-        <div class="section-sep"></div>
-      </div>
-
-      <!-- Carousel -->
-      <div class="carousel-wrap reveal-scale">
-        <div class="carousel-main" id="carousel">
-          <!-- Slides injected by JS -->
-        </div>
-
-        <!-- Navigation -->
-        <button class="carousel-nav-btn carousel-prev" id="carousel-prev" aria-label="Anterior">
-          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        <button class="carousel-nav-btn carousel-next" id="carousel-next" aria-label="Siguiente">
-          <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
-        </button>
-
-        <!-- Dots -->
-        <div class="carousel-dots" id="carousel-dots"></div>
-
-        <!-- Thumbnails -->
-        <div class="carousel-thumbs" id="carousel-thumbs"></div>
-      </div>
-    </div>
-  </section>
-
   <!-- ════════════════════════════ BOOKING ════════════════════════════ -->
   <section id="reservar">
     <!-- bg glows -->
@@ -2769,28 +2769,28 @@
             <div class="qb-panel" id="qb-panel-1">
               <p class="qb-hint">¿Qué servicio necesitas?</p>
               <div class="qb-service-grid">
-                <button class="qb-svc" data-svc="Corte + Cejas" data-price="$20.000">
-                  <span class="qb-svc-name">Corte + Cejas</span>
+                <button class="qb-svc" data-svc="CORTE + CEJA" data-price="$20.000">
+                  <span class="qb-svc-name">CORTE + CEJA</span>
                   <span class="qb-svc-price">$20.000</span>
                 </button>
-                <button class="qb-svc" data-svc="Premium" data-price="$23.000">
-                  <span class="qb-svc-name">Premium</span>
+                <button class="qb-svc" data-svc="CORTE + CEJA + MASCARILLA + PIGMENTACIÓN" data-price="$23.000">
+                  <span class="qb-svc-name">CORTE + CEJA + MASCARILLA + PIGMENTACIÓN</span>
                   <span class="qb-svc-price">$23.000</span>
                 </button>
-                <button class="qb-svc" data-svc="Freestyle" data-price="$24.000">
-                  <span class="qb-svc-name">Freestyle</span>
+                <button class="qb-svc" data-svc="FREESTYLE" data-price="$24.000">
+                  <span class="qb-svc-name">FREESTYLE</span>
                   <span class="qb-svc-price">$24.000</span>
                 </button>
-                <button class="qb-svc" data-svc="Barbado" data-price="$25.000">
-                  <span class="qb-svc-name">Barbado</span>
+                <button class="qb-svc" data-svc="BARBADO" data-price="$25.000">
+                  <span class="qb-svc-name">BARBADO</span>
                   <span class="qb-svc-price">$25.000</span>
                 </button>
-                <button class="qb-svc" data-svc="Barbado Pro Max" data-price="$27.000">
-                  <span class="qb-svc-name">Barbado Pro Max</span>
+                <button class="qb-svc" data-svc="BARBADO PRO MAX" data-price="$27.000">
+                  <span class="qb-svc-name">BARBADO PRO MAX</span>
                   <span class="qb-svc-price">$27.000</span>
                 </button>
-                <button class="qb-svc" data-svc="Perfilado" data-price="$6.000">
-                  <span class="qb-svc-name">Perfilado</span>
+                <button class="qb-svc" data-svc="PERFILADO" data-price="$6.000">
+                  <span class="qb-svc-name">PERFILADO</span>
                   <span class="qb-svc-price">$6.000</span>
                 </button>
               </div>
@@ -2878,7 +2878,7 @@
               <p>
                 <span class="highlight">Lunes – Viernes:</span> 8:00 AM – 8:20 PM<br/>
                 <span class="highlight">Sábado:</span> 8:00 AM – 8:20 PM<br/>
-                <span class="highlight">Domingo:</span> 8:00 AM – 8:20 PM
+                <span class="highlight">Domingo:</span> 8:00 AM – 11:20 AM
               </p>
             </div>
           </div>
@@ -3059,14 +3059,21 @@
       if (step === 3) qbBuildAndRefreshTimeSlots();
     }
 
-    // Horarios: Lun-Sáb 08:40–20:00, Dom 08:40–12:00
+    // Convert 24h "HH:MM" to 12h "H:MM AM/PM"
+    function to12h(t) {
+      const [hh, mm] = t.split(':').map(Number);
+      const period = hh < 12 ? 'AM' : 'PM';
+      const h = hh % 12 === 0 ? 12 : hh % 12;
+      return h + ':' + String(mm).padStart(2, '0') + ' ' + period;
+    }
+
+    // Horarios: Lun-Sáb 08:40–20:00, Dom 08:40–11:20
     function qbBuildTimeSlots(isSunday) {
       // morning always same
       const morning = ['08:40','09:20','10:00','10:40','11:20'];
-      // Sunday ends at 12:00 (no afternoon), others continue
+      // Sunday ends at 11:20 (no afternoon), others continue
       const afternoon = isSunday ? [] : ['14:00','14:40','15:20','16:00','16:40','17:20','18:00','18:40','19:20','20:00'];
-      // noon slot only on Sunday
-      const noon = isSunday ? ['12:00'] : [];
+      const noon = [];
       return { morning, noon, afternoon };
     }
 
@@ -3089,7 +3096,7 @@
           const btn = document.createElement('button');
           btn.className = 'qb-time';
           btn.dataset.time = t;
-          btn.textContent = t;
+          btn.textContent = to12h(t);
           if (isSlotBooked(QB.dateKey, t)) btn.classList.add('booked');
           grid.appendChild(btn);
         });
@@ -3097,7 +3104,6 @@
       }
 
       makeGrid('Mañana', morning);
-      if (isSunday) makeGrid('Mediodía', noon);
       if (!isSunday) makeGrid('Tarde / Noche', afternoon);
     }
 
@@ -3146,7 +3152,7 @@
       QB.time = btn.dataset.time;
       const sum = document.getElementById('qb-summary');
       sum.classList.add('visible');
-      sum.innerHTML = '<strong>' + QB.svc + '</strong><br>' + QB.date + ' · ' + QB.time;
+      sum.innerHTML = '<strong>' + QB.svc + '</strong><br>' + QB.date + ' · ' + to12h(QB.time);
       setTimeout(() => qbGoTo(4), 200);
     });
 
@@ -3162,7 +3168,7 @@
         '📞 Teléfono: ' + phone + '\n' +
         '✂️ Servicio: ' + QB.svc + '\n' +
         '📅 Fecha: ' + QB.date + '\n' +
-        '🕐 Hora: ' + QB.time;
+        '🕐 Hora: ' + to12h(QB.time);
       window.open('https://wa.me/573246559349?text=' + encodeURIComponent(msg), '_blank');
       // Show success and reset after short delay
       setTimeout(() => {
@@ -3219,11 +3225,9 @@
         <img src="${item.img}" alt="${item.name}" loading="${i === 0 ? 'eager' : 'lazy'}" />
         <div class="carousel-overlay"></div>
         <div class="carousel-info">
-          <h3 class="carousel-cut-name">${item.name}</h3>
-          <p class="carousel-cut-desc">${item.desc}</p>
           <button class="btn btn-primary" style="padding:12px 24px;font-size:14px;" onclick="openWACut('${item.name}')">
             <svg style="width:17px;height:17px;fill:currentColor;" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
-            Quiero este corte
+            QUIERO ESTE CORTE
           </button>
         </div>
       `;
