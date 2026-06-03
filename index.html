@@ -2954,7 +2954,7 @@
         <!-- Map -->
         <div class="map-wrap reveal-scale">
           <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3952.487!2d-73.05317!3d6.98972!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8e6836dff1e03a05%3A0x1!2sCl+9+%239-72%2C+Piedecuesta%2C+Santander%2C+Colombia!5e0!3m2!1ses!2sco!4v1748984000000!5m2!1ses!2sco"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31747.01671432539!2d-73.07!3d7.0!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8e683f5f5d6b1c0f%3A0x8c4f0f0f0f0f0f0f!2sPiedecuesta%2C%20Santander%2C%20Colombia!5e0!3m2!1ses!2sco!4v1234567890"
             allowfullscreen
             loading="lazy"
             referrerpolicy="no-referrer-when-downgrade"
@@ -2971,7 +2971,7 @@
             </div>
             <div class="info-body">
               <h3>Dirección</h3>
-              <p>Cl 9 #9-72<br />Piedecuesta, Santander</p>
+              <p>Piedecuesta, Santander<br />Colombia</p>
             </div>
           </div>
 
@@ -3002,7 +3002,7 @@
           <button
             class="btn btn-primary reveal"
             style="transition-delay:0.4s;width:100%;padding:16px;font-size:15px;border-radius:14px;"
-            onclick="window.open('https://www.google.com/maps/search/Barbería+IMAC+Cl+9+%239-72+Piedecuesta+Santander+Colombia','_blank')"
+            onclick="window.open('https://www.google.com/maps/search/Piedecuesta+Santander+Colombia','_blank')"
           >
             <svg style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
             Cómo Llegar
@@ -3072,7 +3072,7 @@
           </a>
           <div class="footer-contact-item" style="cursor:default;">
             <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            Cl 9 #9-72, Piedecuesta, Santander
+            Piedecuesta, Santander
           </div>
         </div>
       </div>
@@ -3117,39 +3117,119 @@
     /* ─── Quick-Book Stepper ─── */
     const QB = { svc: '', svcKey: '', date: '', dateKey: '', time: '' };
 
-    // ── Slot storage helpers (localStorage) ──
-    const SLOTS_KEY = 'imac_booked_slots';
+    // ══════════════════════════════════════════
+    // SISTEMA DE RESERVAS — FIREBASE REST API
+    // Sin SDK, sin dependencias, funciona en cualquier hosting
+    // ══════════════════════════════════════════
+    const FB_URL = 'https://imac-barberia-default-rtdb.firebaseio.com';
+    let _reservas = {};
+    let _bloqueados = {};
 
-    function getBookedSlots() {
-      try { return JSON.parse(localStorage.getItem(SLOTS_KEY) || '{}'); } catch(e) { return {}; }
+    async function fbGet(path) {
+      const r = await fetch(FB_URL + path + '.json');
+      return r.ok ? (await r.json() || {}) : {};
+    }
+    async function fbSet(path, data) {
+      await fetch(FB_URL + path + '.json', { method: 'PUT', body: JSON.stringify(data) });
+    }
+    async function fbDelete(path) {
+      await fetch(FB_URL + path + '.json', { method: 'DELETE' });
+    }
+    // Transacción: escribe solo si el nodo no existe (retorna true si tuvo éxito)
+    async function fbWriteIfEmpty(path, data) {
+      // Leer primero
+      const existing = await fetch(FB_URL + path + '.json');
+      const val = await existing.json();
+      if (val !== null) return false; // ya ocupado
+      // Escribir
+      const res = await fetch(FB_URL + path + '.json', { method: 'PUT', body: JSON.stringify(data) });
+      return res.ok;
+    }
+
+    async function loadReservas() {
+      const [r, b] = await Promise.all([fbGet('/reservas'), fbGet('/bloqueados')]);
+      _reservas = r || {};
+      _bloqueados = b || {};
     }
 
     function isSlotBooked(dateKey, time) {
-      const slots = getBookedSlots();
-      return !!(slots[dateKey] && slots[dateKey][time]);
+      const tk = time.replace(':', '_');
+      return !!(_reservas[dateKey] && _reservas[dateKey][tk]) ||
+             !!(_bloqueados[dateKey] && _bloqueados[dateKey][tk]);
     }
 
-    function bookSlot(dateKey, time) {
-      const slots = getBookedSlots();
-      if (!slots[dateKey]) slots[dateKey] = {};
-      slots[dateKey][time] = true;
-      localStorage.setItem(SLOTS_KEY, JSON.stringify(slots));
+    async function bookSlot(dateKey, time, nombre, telefono, servicio) {
+      const tk = time.replace(':', '_');
+      const path = '/reservas/' + dateKey + '/' + tk;
+      const data = { nombre, telefono, servicio, fechaStr: QB.date, horaStr: to12h(time), timestamp: new Date().toISOString(), id: Date.now().toString(36) };
+      const ok = await fbWriteIfEmpty(path, data);
+      if (ok) await loadReservas();
+      return ok;
     }
 
-    // ── CSS extra for booked/disabled time buttons ──
+    function showToast(msg) {
+      let t = document.getElementById('toast-error');
+      if (!t) { t = document.createElement('div'); t.id='toast-error'; t.className='toast-error'; document.body.appendChild(t); }
+      t.innerHTML = '<svg style="width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.5;flex-shrink:0" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' + msg;
+      t.classList.add('show');
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    // ── CSS extra ──
     (function() {
       const s = document.createElement('style');
       s.textContent = `
-        .qb-time.booked {
-          background: rgba(255,255,255,0.02) !important;
-          border-color: rgba(255,255,255,0.04) !important;
-          color: rgba(115,115,115,0.35) !important;
-          cursor: not-allowed !important;
-          text-decoration: line-through;
-          pointer-events: none;
-        }
-        .qb-time.booked::after { content: ' ✗'; font-size:10px; }
-        .form-input { margin-bottom: 0; }
+        .qb-time.booked { background:rgba(220,38,38,0.04)!important; border-color:rgba(220,38,38,0.12)!important; color:rgba(115,115,115,0.4)!important; cursor:not-allowed!important; text-decoration:line-through; pointer-events:none; }
+        .qb-time.booked::after { content:'OCUPADO'; font-size:9px; display:block; letter-spacing:.05em; margin-top:2px; color:rgba(220,38,38,0.5); text-decoration:none; }
+        .toast-error { position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);background:rgba(200,30,30,0.97);color:#fff;padding:14px 22px;border-radius:12px;font-size:14px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,.5);z-index:9999;opacity:0;transition:all .35s cubic-bezier(.16,1,.3,1);pointer-events:none;backdrop-filter:blur(12px);display:flex;align-items:center;gap:10px; }
+        .toast-error.show { opacity:1;transform:translateX(-50%) translateY(0); }
+        .qb-time-loading { display:flex;align-items:center;gap:8px;color:var(--gray);font-size:13px;padding:20px 0; }
+        .spinner-sm { width:14px;height:14px;border:2px solid rgba(220,38,38,0.2);border-top-color:var(--red);border-radius:50%;animation:spin-slow .8s linear infinite; }
+        .form-input { margin-bottom:0; }
+        /* ADMIN PANEL */
+        #admin-panel { display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.93);backdrop-filter:blur(20px);overflow-y:auto;padding:20px; }
+        #admin-panel.open { display:block; }
+        .admin-wrap { max-width:920px;margin:0 auto;background:rgba(10,10,10,.99);border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:32px;box-shadow:0 30px 80px rgba(0,0,0,.8); }
+        .admin-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px; }
+        .admin-title { font-family:var(--font-title);font-size:20px;font-weight:800;color:var(--white);display:flex;align-items:center;gap:10px; }
+        .admin-title .rdot { width:10px;height:10px;border-radius:50%;background:var(--red);animation:pulse-red 2s ease-in-out infinite; }
+        .admin-close { width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.1);background:transparent;color:var(--gray);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s; }
+        .admin-close:hover { color:var(--white);border-color:rgba(255,255,255,.25); }
+        .admin-tabs { display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap; }
+        .admin-tab { padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,.08);background:transparent;color:var(--gray);transition:all .2s;font-family:var(--font-title); }
+        .admin-tab.active { background:var(--red);color:#fff;border-color:var(--red);box-shadow:0 4px 16px rgba(220,38,38,.3); }
+        .admin-tab:hover:not(.active) { color:var(--white);border-color:rgba(255,255,255,.2); }
+        .admin-section { display:none; }
+        .admin-section.active { display:block; }
+        .admin-stats { display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:24px; }
+        .admin-stat { background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.12);border-radius:14px;padding:18px;text-align:center; }
+        .admin-stat-num { font-family:var(--font-title);font-size:32px;font-weight:800;color:var(--red);line-height:1;margin-bottom:4px; }
+        .admin-stat-label { font-size:11px;color:var(--gray);font-family:var(--font-title);text-transform:uppercase;letter-spacing:.05em; }
+        .reserva-card { background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:16px 18px;margin-bottom:8px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;transition:border-color .2s; }
+        .reserva-card:hover { border-color:rgba(220,38,38,.18); }
+        .reserva-name { font-family:var(--font-title);font-size:14px;font-weight:700;color:var(--white);margin-bottom:3px; }
+        .reserva-meta { font-size:12px;color:var(--gray);line-height:1.7; }
+        .reserva-meta span { color:rgba(255,255,255,.65); }
+        .reserva-badge { font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;background:rgba(52,211,153,.1);color:rgb(52,211,153);border:1px solid rgba(52,211,153,.2);white-space:nowrap;flex-shrink:0;font-family:var(--font-title); }
+        .reserva-badge.blocked { background:rgba(220,38,38,.1);color:rgba(220,100,100,.9);border-color:rgba(220,38,38,.2); }
+        .btn-admin-cancel { padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid rgba(220,38,38,.25);background:rgba(220,38,38,.08);color:rgba(220,100,100,.9);cursor:pointer;transition:all .2s;font-family:var(--font-title); }
+        .btn-admin-cancel:hover { background:rgba(220,38,38,.2); }
+        .empty-state { text-align:center;padding:48px 20px;color:var(--gray);font-size:14px;font-family:var(--font-title); }
+        .admin-bloqueo-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px; }
+        @media(max-width:520px){ .admin-bloqueo-grid{grid-template-columns:1fr;} }
+        .admin-input { width:100%;padding:11px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:var(--white);font-size:14px;font-family:var(--font-body);outline:none;transition:border-color .2s; }
+        .admin-input:focus { border-color:rgba(220,38,38,.4); }
+        .admin-input option { background:#111; }
+        .admin-bloqueo-btn { padding:12px 20px;border-radius:10px;background:var(--red);color:#fff;border:none;cursor:pointer;font-family:var(--font-title);font-size:14px;font-weight:600;width:100%;box-shadow:var(--shadow-btn);transition:all .2s;margin-top:4px; }
+        .admin-bloqueo-btn:hover { background:var(--red-dark);transform:translateY(-1px); }
+        .admin-section-title { font-family:var(--font-title);font-size:12px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;margin-top:20px; }
+        .admin-pwd-wrap { max-width:320px;margin:60px auto;text-align:center; }
+        .admin-pwd-title { font-family:var(--font-title);font-size:18px;font-weight:700;color:var(--white);margin-bottom:6px; }
+        .admin-pwd-sub { font-size:13px;color:var(--gray);margin-bottom:24px; }
+        .admin-pwd-error { color:rgba(220,100,100,.9);font-size:13px;margin-top:10px;display:none; }
+        .admin-open-btn { position:fixed;bottom:110px;right:24px;z-index:200;width:48px;height:48px;border-radius:50%;background:rgba(10,10,10,.9);border:1px solid rgba(255,255,255,.1);color:var(--gray);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.5);transition:all .25s; }
+        .admin-open-btn:hover { color:var(--white);border-color:rgba(220,38,38,.3);background:rgba(30,30,30,.95); }
       `;
       document.head.appendChild(s);
     })();
@@ -3185,32 +3265,32 @@
 
     function qbBuildAndRefreshTimeSlots() {
       const container = document.getElementById('qb-time-container');
-      container.innerHTML = '';
-      // Determine if selected day is Sunday (dateKey is YYYY-MM-DD)
+      container.innerHTML = '<div class="qb-time-loading"><div class="spinner-sm"></div> Verificando disponibilidad...</div>';
       const isSunday = QB.dateKey ? (new Date(QB.dateKey + 'T12:00:00').getDay() === 0) : false;
-      const { morning, noon, afternoon } = qbBuildTimeSlots(isSunday);
-
-      function makeGrid(label, times) {
-        if (!times.length) return;
-        const sec = document.createElement('div');
-        sec.className = 'qb-time-section';
-        sec.textContent = label;
-        container.appendChild(sec);
-        const grid = document.createElement('div');
-        grid.className = 'qb-time-grid';
-        times.forEach(t => {
-          const btn = document.createElement('button');
-          btn.className = 'qb-time';
-          btn.dataset.time = t;
-          btn.textContent = to12h(t);
-          if (isSlotBooked(QB.dateKey, t)) btn.classList.add('booked');
-          grid.appendChild(btn);
-        });
-        container.appendChild(grid);
-      }
-
-      makeGrid('Mañana', morning);
-      if (!isSunday) makeGrid('Tarde / Noche', afternoon);
+      loadReservas().then(() => {
+        const { morning, noon, afternoon } = qbBuildTimeSlots(isSunday);
+        container.innerHTML = '';
+        function makeGrid(label, times) {
+          if (!times.length) return;
+          const sec = document.createElement('div');
+          sec.className = 'qb-time-section';
+          sec.textContent = label;
+          container.appendChild(sec);
+          const grid = document.createElement('div');
+          grid.className = 'qb-time-grid';
+          times.forEach(t => {
+            const btn = document.createElement('button');
+            btn.className = 'qb-time';
+            btn.dataset.time = t;
+            btn.textContent = to12h(t);
+            if (isSlotBooked(QB.dateKey, t)) btn.classList.add('booked');
+            grid.appendChild(btn);
+          });
+          container.appendChild(grid);
+        }
+        makeGrid('Mañana', morning);
+        if (!isSunday) makeGrid('Tarde / Noche', afternoon);
+      });
     }
 
     // Step 1: service pills
@@ -3266,30 +3346,57 @@
       const name = document.getElementById('qb-name').value.trim();
       const phone = document.getElementById('qb-phone').value.trim();
       if (!name) { document.getElementById('qb-name').focus(); return; }
-      if (!phone) { document.getElementById('qb-phone').focus(); return; }
-      // Block the slot immediately
-      bookSlot(QB.dateKey, QB.time);
-      const msg = '¡Hola IMAC Barber! Quiero reservar:\n\n' +
-        '👤 Nombre: ' + name + '\n' +
-        '📞 Teléfono: ' + phone + '\n' +
-        '✂️ Servicio: ' + QB.svc + '\n' +
-        '📅 Fecha: ' + QB.date + '\n' +
-        '🕐 Hora: ' + to12h(QB.time);
-      window.open('https://wa.me/573246559349?text=' + encodeURIComponent(msg), '_blank');
-      // Show success and reset after short delay
-      setTimeout(() => {
-        document.getElementById('form-success').style.display = 'flex';
-        document.getElementById('quick-book').style.display = 'none';
+      if (!phone) { document.getElementById('qb-phone').value = ''; document.getElementById('qb-phone').focus(); return; }
+
+      // Deshabilitar botón durante el proceso
+      const confirmBtn = document.querySelector('#qb-panel-4 .btn-primary');
+      const originalHTML = confirmBtn.innerHTML;
+      confirmBtn.innerHTML = '<div class="spinner-sm" style="border-color:rgba(255,255,255,.3);border-top-color:#fff"></div> Guardando reserva...';
+      confirmBtn.disabled = true;
+      confirmBtn.style.opacity = '0.8';
+
+      // 1. Guardar PRIMERO en base de datos, luego abrir WhatsApp
+      bookSlot(QB.dateKey, QB.time, name, phone, QB.svc).then(saved => {
+        if (!saved) {
+          // Horario ya fue tomado por otro usuario
+          confirmBtn.innerHTML = originalHTML;
+          confirmBtn.disabled = false;
+          confirmBtn.style.opacity = '';
+          showToast('⚡ Este horario acaba de ser reservado. Por favor elige otro.');
+          qbGoTo(3); // volver a selección de hora
+          qbBuildAndRefreshTimeSlots();
+          return;
+        }
+        // 2. Reserva guardada exitosamente → abrir WhatsApp
+        const msg = '¡Hola IMAC Barber! Quiero reservar:\n\n' +
+          '👤 Nombre: ' + name + '\n' +
+          '📞 Teléfono: ' + phone + '\n' +
+          '✂️ Servicio: ' + QB.svc + '\n' +
+          '📅 Fecha: ' + QB.date + '\n' +
+          '🕐 Hora: ' + to12h(QB.time);
+        window.open('https://wa.me/573246559349?text=' + encodeURIComponent(msg), '_blank');
+        confirmBtn.innerHTML = originalHTML;
+        confirmBtn.disabled = false;
+        confirmBtn.style.opacity = '';
         setTimeout(() => {
-          document.getElementById('form-success').style.display = 'none';
-          document.getElementById('quick-book').style.display = '';
-          document.getElementById('qb-name').value = '';
-          document.getElementById('qb-phone').value = '';
-          QB.svc = ''; QB.svcKey = ''; QB.date = ''; QB.dateKey = ''; QB.time = '';
-          document.querySelectorAll('.qb-svc').forEach(b => b.classList.remove('selected'));
-          qbGoTo(1);
-        }, 4000);
-      }, 300);
+          document.getElementById('form-success').style.display = 'flex';
+          document.getElementById('quick-book').style.display = 'none';
+          setTimeout(() => {
+            document.getElementById('form-success').style.display = 'none';
+            document.getElementById('quick-book').style.display = '';
+            document.getElementById('qb-name').value = '';
+            document.getElementById('qb-phone').value = '';
+            QB.svc = ''; QB.svcKey = ''; QB.date = ''; QB.dateKey = ''; QB.time = '';
+            document.querySelectorAll('.qb-svc').forEach(b => b.classList.remove('selected'));
+            qbGoTo(1);
+          }, 4000);
+        }, 300);
+      }).catch(() => {
+        confirmBtn.innerHTML = originalHTML;
+        confirmBtn.disabled = false;
+        confirmBtn.style.opacity = '';
+        showToast('Error al guardar. Intenta de nuevo.');
+      });
     }
 
     /* ─── WhatsApp helpers ─── */
@@ -3439,6 +3546,259 @@
         if (g2) g2.style.transform = `translate(${cx * -20}px, ${cy * -14}px)`;
       }, { passive: true });
     }
+
+  </script>
+
+  <!-- ════════════════════════════ ADMIN PANEL ════════════════════════════ -->
+  <!-- Botón discreto para abrir el panel (esquina inferior derecha) -->
+  <button class="admin-open-btn" id="admin-open-btn" title="Panel de Administración" onclick="adminOpen()">
+    <svg style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+  </button>
+
+  <div id="admin-panel">
+    <div class="admin-wrap">
+      <!-- Pantalla de contraseña -->
+      <div id="admin-auth" class="admin-pwd-wrap">
+        <div style="font-size:36px;margin-bottom:12px;">🔐</div>
+        <div class="admin-pwd-title">Panel de Administración</div>
+        <div class="admin-pwd-sub">Ingresa la clave para continuar</div>
+        <input type="password" id="admin-pwd-input" class="admin-input" placeholder="Contraseña" style="margin-bottom:10px;text-align:center;" onkeydown="if(event.key==='Enter')adminLogin()" />
+        <button class="admin-bloqueo-btn" onclick="adminLogin()">Entrar</button>
+        <div id="admin-pwd-error" class="admin-pwd-error">Contraseña incorrecta</div>
+        <button onclick="adminClose()" style="margin-top:16px;background:transparent;border:none;color:var(--gray);font-size:13px;cursor:pointer;">Cancelar</button>
+      </div>
+
+      <!-- Contenido del panel (oculto hasta autenticar) -->
+      <div id="admin-content" style="display:none;">
+        <div class="admin-header">
+          <div class="admin-title"><div class="rdot"></div> Panel IMAC Barber</div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button onclick="adminRefresh()" style="padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:transparent;color:var(--gray);font-size:12px;cursor:pointer;font-family:var(--font-title);transition:all .2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--gray)'">↻ Actualizar</button>
+            <button class="admin-close" onclick="adminClose()">✕</button>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="admin-stats" id="admin-stats-row"></div>
+
+        <!-- Tabs -->
+        <div class="admin-tabs">
+          <button class="admin-tab active" onclick="adminTab('reservas',this)">📋 Reservas</button>
+          <button class="admin-tab" onclick="adminTab('bloquear',this)">🚫 Bloquear Horario</button>
+        </div>
+
+        <!-- Tab: Reservas -->
+        <div class="admin-section active" id="atab-reservas">
+          <div id="admin-reservas-list"></div>
+        </div>
+
+        <!-- Tab: Bloquear horario manual -->
+        <div class="admin-section" id="atab-bloquear">
+          <p style="font-size:13px;color:var(--gray);margin-bottom:20px;">Bloquea manualmente un horario para que no aparezca disponible (vacaciones, mantenimiento, etc.)</p>
+          <div class="admin-bloqueo-grid">
+            <div>
+              <div class="admin-section-title">Fecha</div>
+              <input type="date" id="bloqueo-fecha" class="admin-input" />
+            </div>
+            <div>
+              <div class="admin-section-title">Hora</div>
+              <select id="bloqueo-hora" class="admin-input">
+                <option value="">Selecciona hora</option>
+                <option value="08:40">8:40 AM</option>
+                <option value="09:20">9:20 AM</option>
+                <option value="10:00">10:00 AM</option>
+                <option value="10:40">10:40 AM</option>
+                <option value="11:20">11:20 AM</option>
+                <option value="14:00">2:00 PM</option>
+                <option value="14:40">2:40 PM</option>
+                <option value="15:20">3:20 PM</option>
+                <option value="16:00">4:00 PM</option>
+                <option value="16:40">4:40 PM</option>
+                <option value="17:20">5:20 PM</option>
+                <option value="18:00">6:00 PM</option>
+                <option value="18:40">6:40 PM</option>
+                <option value="19:20">7:20 PM</option>
+                <option value="20:00">8:00 PM</option>
+              </select>
+            </div>
+          </div>
+          <button class="admin-bloqueo-btn" onclick="adminBloquear()">🚫 Bloquear este horario</button>
+
+          <div class="admin-section-title" style="margin-top:28px;">Horarios bloqueados manualmente</div>
+          <div id="admin-bloqueados-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ADMIN_PWD = 'imac2025';
+    let _adminAuth = false;
+
+    function adminOpen() {
+      document.getElementById('admin-panel').classList.add('open');
+      if (!_adminAuth) {
+        document.getElementById('admin-auth').style.display = '';
+        document.getElementById('admin-content').style.display = 'none';
+        setTimeout(() => document.getElementById('admin-pwd-input').focus(), 100);
+      } else {
+        adminRefresh();
+      }
+    }
+
+    function adminClose() {
+      document.getElementById('admin-panel').classList.remove('open');
+    }
+
+    function adminLogin() {
+      const val = document.getElementById('admin-pwd-input').value;
+      if (val === ADMIN_PWD) {
+        _adminAuth = true;
+        document.getElementById('admin-pwd-error').style.display = 'none';
+        document.getElementById('admin-auth').style.display = 'none';
+        document.getElementById('admin-content').style.display = 'block';
+        document.getElementById('admin-pwd-input').value = '';
+        adminRefresh();
+      } else {
+        document.getElementById('admin-pwd-error').style.display = 'block';
+        document.getElementById('admin-pwd-input').value = '';
+        document.getElementById('admin-pwd-input').focus();
+      }
+    }
+
+    function adminTab(name, btn) {
+      document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('atab-' + name).classList.add('active');
+    }
+
+    async function adminRefresh() {
+      await loadReservas();
+      renderAdminStats();
+      renderAdminReservas();
+      renderAdminBloqueados();
+    }
+
+    function renderAdminStats() {
+      let totalReservas = 0, hoy = 0, proximas = 0;
+      const todayKey = new Date().toISOString().split('T')[0];
+      Object.entries(_reservas).forEach(([dk, slots]) => {
+        Object.keys(slots).forEach(() => {
+          totalReservas++;
+          if (dk === todayKey) hoy++;
+          if (dk >= todayKey) proximas++;
+        });
+      });
+      let bloqueados = 0;
+      Object.values(_bloqueados).forEach(s => bloqueados += Object.keys(s).length);
+      document.getElementById('admin-stats-row').innerHTML = `
+        <div class="admin-stat"><div class="admin-stat-num">${totalReservas}</div><div class="admin-stat-label">Total</div></div>
+        <div class="admin-stat"><div class="admin-stat-num">${hoy}</div><div class="admin-stat-label">Hoy</div></div>
+        <div class="admin-stat"><div class="admin-stat-num">${proximas}</div><div class="admin-stat-label">Próximas</div></div>
+        <div class="admin-stat"><div class="admin-stat-num">${bloqueados}</div><div class="admin-stat-label">Bloqueados</div></div>
+      `;
+    }
+
+    function renderAdminReservas() {
+      const list = document.getElementById('admin-reservas-list');
+      const todayKey = new Date().toISOString().split('T')[0];
+      let entries = [];
+      Object.entries(_reservas).forEach(([dk, slots]) => {
+        Object.entries(slots).forEach(([tk, data]) => {
+          const t = tk.replace('_', ':');
+          entries.push({ dk, t, tk, ...data });
+        });
+      });
+      entries.sort((a, b) => (b.dk + b.t).localeCompare(a.dk + a.t));
+      if (!entries.length) {
+        list.innerHTML = '<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>No hay reservas aún</div>';
+        return;
+      }
+      list.innerHTML = entries.map(e => {
+        const isPast = e.dk < todayKey;
+        const badge = isPast ? '<span class="reserva-badge" style="background:rgba(255,255,255,.05);color:rgba(255,255,255,.3);border-color:rgba(255,255,255,.08);">Pasada</span>' : '<span class="reserva-badge">✓ Confirmada</span>';
+        return `<div class="reserva-card">
+          <div style="flex:1;min-width:0">
+            <div class="reserva-name">${e.nombre}</div>
+            <div class="reserva-meta">
+              📞 <span>${e.telefono}</span> &nbsp;·&nbsp;
+              ✂️ <span>${e.servicio}</span><br>
+              📅 <span>${e.fechaStr || e.dk}</span> &nbsp;·&nbsp;
+              🕐 <span>${e.horaStr || to12h(e.t)}</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0">
+            ${badge}
+            <button class="btn-admin-cancel" onclick="adminCancelarReserva('${e.dk}','${e.t}')">Cancelar</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderAdminBloqueados() {
+      const list = document.getElementById('admin-bloqueados-list');
+      let entries = [];
+      Object.entries(_bloqueados).forEach(([dk, slots]) => {
+        Object.keys(slots).forEach(tk => {
+          const t = tk.replace('_', ':');
+          entries.push({ dk, t });
+        });
+      });
+      entries.sort((a, b) => (a.dk + a.t).localeCompare(b.dk + b.t));
+      if (!entries.length) {
+        list.innerHTML = '<div class="empty-state" style="padding:24px 0;">Sin horarios bloqueados manualmente</div>';
+        return;
+      }
+      list.innerHTML = entries.map(e => `
+        <div class="reserva-card">
+          <div style="flex:1">
+            <div class="reserva-name">🚫 Horario bloqueado</div>
+            <div class="reserva-meta">📅 <span>${e.dk}</span> &nbsp;·&nbsp; 🕐 <span>${to12h(e.t)}</span></div>
+          </div>
+          <button class="btn-admin-cancel" onclick="adminDesbloquear('${e.dk}','${e.t}')">Liberar</button>
+        </div>`).join('');
+    }
+
+    async function adminCancelarReserva(dk, t) {
+      if (!confirm('¿Cancelar esta reserva y liberar el horario?')) return;
+      const tk = t.replace(':', '_');
+      await fbDelete('/reservas/' + dk + '/' + tk);
+      await loadReservas();
+      showToast('Reserva cancelada y horario liberado.');
+      renderAdminStats();
+      renderAdminReservas();
+    }
+
+    async function adminBloquear() {
+      const fecha = document.getElementById('bloqueo-fecha').value;
+      const hora = document.getElementById('bloqueo-hora').value;
+      if (!fecha || !hora) { showToast('Selecciona fecha y hora.'); return; }
+      const tk = hora.replace(':', '_');
+      await loadReservas();
+      if (isSlotBooked(fecha, hora)) { showToast('Este horario ya está ocupado o bloqueado.'); return; }
+      await fbSet('/bloqueados/' + fecha + '/' + tk, true);
+      await loadReservas();
+      showToast('Horario bloqueado correctamente.');
+      document.getElementById('bloqueo-fecha').value = '';
+      document.getElementById('bloqueo-hora').value = '';
+      renderAdminStats();
+      renderAdminBloqueados();
+    }
+
+    async function adminDesbloquear(dk, t) {
+      const tk = t.replace(':', '_');
+      await fbDelete('/bloqueados/' + dk + '/' + tk);
+      await loadReservas();
+      showToast('Horario liberado.');
+      renderAdminStats();
+      renderAdminBloqueados();
+    }
+
+    // Setear fecha mínima en bloqueo
+    const bloqueoFecha = document.getElementById('bloqueo-fecha');
+    if (bloqueoFecha) bloqueoFecha.min = new Date().toISOString().split('T')[0];
+    // Firebase listener ya carga los datos automáticamente al conectar
   </script>
 
 </body>
