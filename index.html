@@ -2818,8 +2818,9 @@
 
             <!-- Step 4: Name + confirm -->
             <div class="qb-panel qb-hidden" id="qb-panel-4">
-              <p class="qb-hint">¿Cómo te llamas?</p>
-              <input type="text" id="qb-name" class="form-input" placeholder="Tu nombre" autocomplete="given-name" />
+              <p class="qb-hint">¿Cómo te llamas y cuál es tu número?</p>
+              <input type="text" id="qb-name" class="form-input" placeholder="Tu nombre" autocomplete="given-name" style="margin-bottom:10px;" />
+              <input type="tel" id="qb-phone" class="form-input" placeholder="Número de teléfono" autocomplete="tel" />
 
               <!-- Summary pill -->
               <div class="qb-summary" id="qb-summary"></div>
@@ -3012,6 +3013,145 @@
     /* ─── Set today's date min ─── */
     const dateInput = document.getElementById('date-input');
     if (dateInput) dateInput.min = new Date().toISOString().split('T')[0];
+
+    /* ─── Quick-Book Stepper ─── */
+    const QB = { svc: '', svcKey: '', date: '', dateKey: '', time: '' };
+
+    // ── Slot storage helpers (localStorage) ──
+    const SLOTS_KEY = 'imac_booked_slots';
+
+    function getBookedSlots() {
+      try { return JSON.parse(localStorage.getItem(SLOTS_KEY) || '{}'); } catch(e) { return {}; }
+    }
+
+    function isSlotBooked(dateKey, time) {
+      const slots = getBookedSlots();
+      return !!(slots[dateKey] && slots[dateKey][time]);
+    }
+
+    function bookSlot(dateKey, time) {
+      const slots = getBookedSlots();
+      if (!slots[dateKey]) slots[dateKey] = {};
+      slots[dateKey][time] = true;
+      localStorage.setItem(SLOTS_KEY, JSON.stringify(slots));
+    }
+
+    // ── CSS extra for booked/disabled time buttons ──
+    (function() {
+      const s = document.createElement('style');
+      s.textContent = `
+        .qb-time.booked {
+          background: rgba(255,255,255,0.02) !important;
+          border-color: rgba(255,255,255,0.04) !important;
+          color: rgba(115,115,115,0.35) !important;
+          cursor: not-allowed !important;
+          text-decoration: line-through;
+          pointer-events: none;
+        }
+        .qb-time.booked::after { content: ' ✗'; font-size:10px; }
+        .form-input { margin-bottom: 0; }
+      `;
+      document.head.appendChild(s);
+    })();
+
+    function qbGoTo(step) {
+      document.querySelectorAll('.qb-panel').forEach(p => p.classList.add('qb-hidden'));
+      document.getElementById('qb-panel-' + step).classList.remove('qb-hidden');
+      document.querySelectorAll('.qb-step').forEach((s, i) => {
+        s.classList.remove('active', 'done');
+        if (i + 1 < step) s.classList.add('done');
+        if (i + 1 === step) s.classList.add('active');
+      });
+      // When going to step 3, refresh booked state
+      if (step === 3) qbRefreshTimeSlots();
+    }
+
+    function qbRefreshTimeSlots() {
+      document.querySelectorAll('.qb-time').forEach(btn => {
+        const booked = isSlotBooked(QB.dateKey, btn.dataset.time);
+        btn.classList.toggle('booked', booked);
+        btn.classList.remove('selected');
+      });
+    }
+
+    // Step 1: service pills
+    document.querySelectorAll('.qb-svc').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.qb-svc').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        QB.svc = btn.dataset.svc + ' · ' + btn.dataset.price;
+        QB.svcKey = btn.dataset.svc;
+        // build day grid
+        const grid = document.getElementById('qb-days');
+        grid.innerHTML = '';
+        const days = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+        const months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+        for (let i = 0; i < 8; i++) {
+          const d = new Date();
+          d.setDate(d.getDate() + i);
+          const db = document.createElement('button');
+          db.className = 'qb-day';
+          db.innerHTML = '<span class="qb-day-name">' + days[d.getDay()] + '</span><span class="qb-day-num">' + d.getDate() + '</span><span class="qb-day-name">' + months[d.getMonth()] + '</span>';
+          // Store a stable date key (YYYY-MM-DD)
+          const yyyy = d.getFullYear();
+          const mm = String(d.getMonth()+1).padStart(2,'0');
+          const dd2 = String(d.getDate()).padStart(2,'0');
+          const dateKey = yyyy + '-' + mm + '-' + dd2;
+          db.addEventListener('click', () => {
+            document.querySelectorAll('.qb-day').forEach(b => b.classList.remove('selected'));
+            db.classList.add('selected');
+            QB.date = days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()];
+            QB.dateKey = dateKey;
+            setTimeout(() => qbGoTo(3), 200);
+          });
+          grid.appendChild(db);
+        }
+        qbGoTo(2);
+      });
+    });
+
+    // Step 3: time pills (use event delegation to avoid stale listeners)
+    document.getElementById('qb-panel-3').addEventListener('click', function(e) {
+      const btn = e.target.closest('.qb-time');
+      if (!btn || btn.classList.contains('booked')) return;
+      document.querySelectorAll('.qb-time').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      QB.time = btn.dataset.time;
+      const sum = document.getElementById('qb-summary');
+      sum.classList.add('visible');
+      sum.innerHTML = '<strong>' + QB.svc + '</strong><br>' + QB.date + ' · ' + QB.time;
+      setTimeout(() => qbGoTo(4), 200);
+    });
+
+    function qbConfirm() {
+      const name = document.getElementById('qb-name').value.trim();
+      const phone = document.getElementById('qb-phone').value.trim();
+      if (!name) { document.getElementById('qb-name').focus(); return; }
+      if (!phone) { document.getElementById('qb-phone').focus(); return; }
+      // Block the slot immediately
+      bookSlot(QB.dateKey, QB.time);
+      const msg = '¡Hola IMAC Barber! Quiero reservar:\n\n' +
+        '👤 Nombre: ' + name + '\n' +
+        '📞 Teléfono: ' + phone + '\n' +
+        '✂️ Servicio: ' + QB.svc + '\n' +
+        '📅 Fecha: ' + QB.date + '\n' +
+        '🕐 Hora: ' + QB.time;
+      window.open('https://wa.me/573246559349?text=' + encodeURIComponent(msg), '_blank');
+      // Show success and reset after short delay
+      setTimeout(() => {
+        document.getElementById('form-success').style.display = 'flex';
+        document.getElementById('quick-book').style.display = 'none';
+        setTimeout(() => {
+          document.getElementById('form-success').style.display = 'none';
+          document.getElementById('quick-book').style.display = '';
+          document.getElementById('qb-name').value = '';
+          document.getElementById('qb-phone').value = '';
+          QB.svc = ''; QB.svcKey = ''; QB.date = ''; QB.dateKey = ''; QB.time = '';
+          document.querySelectorAll('.qb-svc').forEach(b => b.classList.remove('selected'));
+          qbGoTo(1);
+        }, 4000);
+      }, 300);
+    }
 
     /* ─── WhatsApp helpers ─── */
     function openWA(service) {
