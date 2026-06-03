@@ -997,7 +997,7 @@
     }
 
     /* ══════════════════════════════════════════════
-       SERVICES
+       SERVICES — PREMIUM LIST MENU
     ══════════════════════════════════════════════ */
     #servicios {
       position: relative;
@@ -1011,20 +1011,199 @@
       margin-bottom: 68px;
     }
 
-    .services-grid {
-      display: grid;
-      grid-template-columns: 1fr;
+    /* ── Menu list container ── */
+    .services-list {
+      max-width: 780px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* ── Individual service row ── */
+    .service-item {
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
       gap: 20px;
+      padding: 28px 32px;
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+      overflow: hidden;
+      box-shadow: var(--shadow-card), var(--shadow-red);
     }
 
-    @media (min-width: 640px) {
-      .services-grid { grid-template-columns: repeat(2, 1fr); }
+    .service-item::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(110deg, rgba(220,38,38,0.05) 0%, transparent 55%);
+      opacity: 0;
+      transition: opacity 0.4s;
+      pointer-events: none;
     }
 
-    @media (min-width: 1024px) {
-      .services-grid { grid-template-columns: repeat(3, 1fr); }
+    .service-item:hover {
+      border-color: rgba(220,38,38,0.24);
+      box-shadow: var(--shadow-card-hover), var(--shadow-red-hover);
+      transform: translateY(-2px) scale(1.008);
+      background: rgba(22,22,22,0.80);
     }
 
+    .service-item:hover::before { opacity: 1; }
+
+    /* ── Left: emoji + info ── */
+    .service-item-left {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .service-emoji {
+      font-size: 26px;
+      line-height: 1;
+      flex-shrink: 0;
+      margin-top: 2px;
+      filter: drop-shadow(0 0 8px rgba(220,38,38,0.3));
+      transition: filter 0.3s, transform 0.3s;
+    }
+
+    .service-item:hover .service-emoji {
+      filter: drop-shadow(0 0 14px rgba(220,38,38,0.55));
+      transform: scale(1.12);
+    }
+
+    .service-item-text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* ── Tier badge (BÁSICO, PREMIUM…) ── */
+    .service-tier {
+      display: inline-block;
+      font-family: var(--font-title);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(220,38,38,0.85);
+      background: rgba(220,38,38,0.08);
+      border: 1px solid rgba(220,38,38,0.15);
+      border-radius: var(--radius-full);
+      padding: 3px 10px;
+      margin-bottom: 6px;
+    }
+
+    .service-name {
+      font-family: var(--font-title);
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin-bottom: 5px;
+      transition: color 0.3s;
+    }
+
+    .service-item:hover .service-name { color: var(--white); }
+
+    .service-desc {
+      font-family: var(--font-body);
+      font-size: 12.5px;
+      color: var(--gray);
+      line-height: 1.6;
+    }
+
+    /* ── Right: price + cta ── */
+    .service-item-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .service-price {
+      font-family: var(--font-title);
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--red);
+      letter-spacing: -0.02em;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .service-cta {
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-title);
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.65);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      transition: all 0.3s;
+      white-space: nowrap;
+      letter-spacing: 0.04em;
+    }
+
+    .service-item:hover .service-cta {
+      background: var(--red);
+      border-color: var(--red);
+      color: var(--white);
+      box-shadow: 0 4px 18px rgba(220,38,38,0.3);
+    }
+
+    /* ── Separator between items ── */
+    .service-sep {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 32px;
+    }
+
+    .service-sep-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(220,38,38,0.15), transparent);
+    }
+
+    .service-sep-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: rgba(220,38,38,0.3);
+      flex-shrink: 0;
+    }
+
+    /* ── Mobile adjustments ── */
+    @media (max-width: 540px) {
+      .service-item {
+        flex-direction: column;
+        gap: 16px;
+        padding: 22px 20px;
+      }
+      .service-item-right {
+        flex-direction: row;
+        align-items: center;
+        width: 100%;
+        justify-content: space-between;
+      }
+      .service-emoji { font-size: 22px; }
+      .service-name { font-size: 16px; }
+      .service-price { font-size: 20px; }
+    }
+
+    /* Legacy .service-card kept for QB stepper compatibility */
     .service-card {
       background: var(--glass-bg);
       backdrop-filter: var(--glass-blur);
@@ -1037,104 +1216,6 @@
       position: relative;
       overflow: hidden;
       box-shadow: var(--shadow-card), var(--shadow-red);
-    }
-
-    .service-card::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(220,38,38,0.05) 0%, transparent 60%);
-      opacity: 0;
-      transition: opacity 0.4s;
-    }
-
-    .service-card:hover {
-      border-color: rgba(220,38,38,0.22);
-      box-shadow: var(--shadow-card-hover), var(--shadow-red-hover);
-      transform: translateY(-3px) scale(1.01);
-    }
-
-    .service-card:hover::before { opacity: 1; }
-
-    .service-icon-wrap {
-      width: 52px;
-      height: 52px;
-      border-radius: var(--radius-md);
-      background: rgba(220,38,38,0.08);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 22px;
-      transition: background 0.3s;
-      border: 1px solid rgba(220,38,38,0.1);
-    }
-
-    .service-card:hover .service-icon-wrap {
-      background: rgba(220,38,38,0.14);
-      border-color: rgba(220,38,38,0.2);
-    }
-
-    .service-icon-wrap svg {
-      width: 24px;
-      height: 24px;
-      fill: none;
-      stroke: var(--red);
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    .service-name {
-      text-transform: uppercase;
-      font-family: var(--font-body);
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--white);
-      margin-bottom: 8px;
-      transition: color 0.3s;
-      letter-spacing: -0.01em;
-    }
-
-    .service-card:hover .service-name { color: var(--red); }
-
-    .service-desc {
-      font-family: var(--font-body);
-      font-size: 13px;
-      color: var(--gray);
-      line-height: 1.65;
-      margin-bottom: 24px;
-    }
-
-    .service-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .service-price {
-      font-family: var(--font-title);
-      font-size: 24px;
-      font-weight: 700;
-      color: var(--red);
-      line-height: 1;
-    }
-
-    .service-cta {
-      padding: 8px 18px;
-      border-radius: var(--radius-sm);
-      font-family: var(--font-title);
-      font-size: 12px;
-      font-weight: 600;
-      color: rgba(255,255,255,0.7);
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.06);
-      transition: all 0.3s;
-    }
-
-    .service-card:hover .service-cta {
-      background: var(--red);
-      border-color: var(--red);
-      color: var(--white);
     }
 
     /* ══════════════════════════════════════════════
@@ -2641,91 +2722,116 @@
 
     <div class="container">
       <div class="services-header reveal">
-        <div class="section-label">Nuestros Servicios</div>
+        <div class="section-label">💈 Lista de Servicios</div>
         <h2 class="section-title">PRECIOS &amp; <span class="accent">SERVICIOS</span></h2>
         <p class="section-subtitle">Experiencias premium diseñadas para ti</p>
         <div class="section-sep"></div>
       </div>
 
-      <div class="services-grid">
-        <!-- Card 1 -->
-        <div class="service-card reveal" style="transition-delay:0.1s" onclick="openWA('CORTE + CEJA')">
-          <div class="service-icon-wrap">
-            <svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+      <!-- ── LISTA DE SERVICIOS ── -->
+      <div class="services-list">
+
+        <!-- 1. BÁSICO -->
+        <div class="service-item reveal" style="transition-delay:0.08s" onclick="openWA('BÁSICO — Corte de cabello + diseño de cejas')">
+          <div class="service-item-left">
+            <span class="service-emoji">✂️</span>
+            <div class="service-item-text">
+              <span class="service-tier">Básico</span>
+              <div class="service-name">CORTE DE CABELLO + DISEÑO DE CEJAS:</div>
+            </div>
           </div>
-          <div class="service-name">CORTE + CEJA</div>
-          <p class="service-desc">Corte profesional con perfilado de cejas incluido. Acabado impecable.</p>
-          <div class="service-footer">
+          <div class="service-item-right">
             <span class="service-price">$20.000</span>
             <span class="service-cta">Reservar</span>
           </div>
         </div>
 
-        <!-- Card 2 -->
-        <div class="service-card reveal" style="transition-delay:0.18s" onclick="openWA('CORTE + CEJA + MASCARILLA + PIGMENTACIÓN')">
-          <div class="service-icon-wrap">
-            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <div class="service-sep"><div class="service-sep-line"></div><div class="service-sep-dot"></div><div class="service-sep-line"></div></div>
+
+        <!-- 2. PREMIUM -->
+        <div class="service-item reveal" style="transition-delay:0.16s" onclick="openWA('PREMIUM — Corte + cejas + mascarilla + pigmentación')">
+          <div class="service-item-left">
+            <span class="service-emoji">⭐</span>
+            <div class="service-item-text">
+              <span class="service-tier">Premium</span>
+              <div class="service-name">CORTE DE CABELLO + DISEÑO DE CEJAS + MASCARILLA FACIAL + PIGMENTACIÓN:</div>
+            </div>
           </div>
-          <div class="service-name">CORTE + CEJA + MASCARILLA + PIGMENTACIÓN</div>
-          <p class="service-desc">Paquete completo con corte, cejas, mascarilla facial y pigmentación premium.</p>
-          <div class="service-footer">
+          <div class="service-item-right">
             <span class="service-price">$23.000</span>
             <span class="service-cta">Reservar</span>
           </div>
         </div>
 
-        <!-- Card 3 -->
-        <div class="service-card reveal" style="transition-delay:0.26s" onclick="openWA('FREESTYLE')">
-          <div class="service-icon-wrap">
-            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M9 12l2 2 4-4"/></svg>
+        <div class="service-sep"><div class="service-sep-line"></div><div class="service-sep-dot"></div><div class="service-sep-line"></div></div>
+
+        <!-- 3. FREESTYLE -->
+        <div class="service-item reveal" style="transition-delay:0.24s" onclick="openWA('FREESTYLE — Corte + cejas + mascarilla + diseño freestyle')">
+          <div class="service-item-left">
+            <span class="service-emoji">🔥</span>
+            <div class="service-item-text">
+              <span class="service-tier">Freestyle</span>
+              <div class="service-name">CORTE DE CABELLO + DISEÑO DE CEJAS + MASCARILLA FACIAL + DISEÑO FREESTYLE:</div>
+            </div>
           </div>
-          <div class="service-name">FREESTYLE</div>
-          <p class="service-desc">Diseños personalizados y creativos según tu estilo único.</p>
-          <div class="service-footer">
+          <div class="service-item-right">
             <span class="service-price">$24.000</span>
             <span class="service-cta">Reservar</span>
           </div>
         </div>
 
-        <!-- Card 4 -->
-        <div class="service-card reveal" style="transition-delay:0.34s" onclick="openWA('BARBADO')">
-          <div class="service-icon-wrap">
-            <svg viewBox="0 0 24 24"><path d="M3 9l4-4 4 4 4-4 4 4"/><path d="M3 15l4-4 4 4 4-4 4 4"/></svg>
+        <div class="service-sep"><div class="service-sep-line"></div><div class="service-sep-dot"></div><div class="service-sep-line"></div></div>
+
+        <!-- 4. BARBA CLÁSICA -->
+        <div class="service-item reveal" style="transition-delay:0.32s" onclick="openWA('BARBA CLÁSICA — Corte + cejas + perfilado de barba')">
+          <div class="service-item-left">
+            <span class="service-emoji">🧔</span>
+            <div class="service-item-text">
+              <span class="service-tier">Barba Clásica</span>
+              <div class="service-name">CORTE DE CABELLO + DISEÑO DE CEJAS + PERFILADO DE BARBA:</div>
+            </div>
           </div>
-          <div class="service-name">BARBADO</div>
-          <p class="service-desc">Perfilado y diseño de barba con navaja. Precisión artesanal.</p>
-          <div class="service-footer">
+          <div class="service-item-right">
             <span class="service-price">$25.000</span>
             <span class="service-cta">Reservar</span>
           </div>
         </div>
 
-        <!-- Card 5 -->
-        <div class="service-card reveal" style="transition-delay:0.42s" onclick="openWA('BARBADO PRO MAX')">
-          <div class="service-icon-wrap">
-            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <div class="service-sep"><div class="service-sep-line"></div><div class="service-sep-dot"></div><div class="service-sep-line"></div></div>
+
+        <!-- 5. BARBA PREMIUM -->
+        <div class="service-item reveal" style="transition-delay:0.40s" onclick="openWA('BARBA PREMIUM — Corte + cejas + perfilado + mascarilla + pigmentación de barba')">
+          <div class="service-item-left">
+            <span class="service-emoji">👑</span>
+            <div class="service-item-text">
+              <span class="service-tier">Barba Premium</span>
+              <div class="service-name">CORTE DE CABELLO + DISEÑO DE CEJAS + PERFILADO DE BARBA + MASCARILLA FACIAL + PIGMENTACIÓN DE BARBA:</div>
+            </div>
           </div>
-          <div class="service-name">BARBADO PRO MAX</div>
-          <p class="service-desc">Tratamiento completo de barba con productos premium de primera línea.</p>
-          <div class="service-footer">
+          <div class="service-item-right">
             <span class="service-price">$27.000</span>
             <span class="service-cta">Reservar</span>
           </div>
         </div>
 
-        <!-- Card 6 -->
-        <div class="service-card reveal" style="transition-delay:0.5s" onclick="openWA('PERFILADO')">
-          <div class="service-icon-wrap">
-            <svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+        <div class="service-sep"><div class="service-sep-line"></div><div class="service-sep-dot"></div><div class="service-sep-line"></div></div>
+
+        <!-- 6. PERFILADO -->
+        <div class="service-item reveal" style="transition-delay:0.48s" onclick="openWA('PERFILADO — Cerquillo + diseño de cejas')">
+          <div class="service-item-left">
+            <span class="service-emoji">✨</span>
+            <div class="service-item-text">
+              <span class="service-tier">Perfilado</span>
+              <div class="service-name">CERQUILLO + DISEÑO DE CEJAS:</div>
+            </div>
           </div>
-          <div class="service-name">PERFILADO</div>
-          <p class="service-desc">Retoque rápido de cejas y contornos. Definición perfecta.</p>
-          <div class="service-footer">
+          <div class="service-item-right">
             <span class="service-price">$6.000</span>
             <span class="service-cta">Reservar</span>
           </div>
         </div>
-      </div>
+
+      </div><!-- /.services-list -->
     </div>
   </section>
 
@@ -2769,28 +2875,28 @@
             <div class="qb-panel" id="qb-panel-1">
               <p class="qb-hint">¿Qué servicio necesitas?</p>
               <div class="qb-service-grid">
-                <button class="qb-svc" data-svc="CORTE + CEJA" data-price="$20.000">
-                  <span class="qb-svc-name">CORTE + CEJA</span>
+                <button class="qb-svc" data-svc="✂️ BÁSICO" data-price="$20.000">
+                  <span class="qb-svc-name">✂️ BÁSICO</span>
                   <span class="qb-svc-price">$20.000</span>
                 </button>
-                <button class="qb-svc" data-svc="CORTE + CEJA + MASCARILLA + PIGMENTACIÓN" data-price="$23.000">
-                  <span class="qb-svc-name">CORTE + CEJA + MASCARILLA + PIGMENTACIÓN</span>
+                <button class="qb-svc" data-svc="⭐ PREMIUM" data-price="$23.000">
+                  <span class="qb-svc-name">⭐ PREMIUM</span>
                   <span class="qb-svc-price">$23.000</span>
                 </button>
-                <button class="qb-svc" data-svc="FREESTYLE" data-price="$24.000">
-                  <span class="qb-svc-name">FREESTYLE</span>
+                <button class="qb-svc" data-svc="🔥 FREESTYLE" data-price="$24.000">
+                  <span class="qb-svc-name">🔥 FREESTYLE</span>
                   <span class="qb-svc-price">$24.000</span>
                 </button>
-                <button class="qb-svc" data-svc="BARBADO" data-price="$25.000">
-                  <span class="qb-svc-name">BARBADO</span>
+                <button class="qb-svc" data-svc="🧔 BARBA CLÁSICA" data-price="$25.000">
+                  <span class="qb-svc-name">🧔 BARBA CLÁSICA</span>
                   <span class="qb-svc-price">$25.000</span>
                 </button>
-                <button class="qb-svc" data-svc="BARBADO PRO MAX" data-price="$27.000">
-                  <span class="qb-svc-name">BARBADO PRO MAX</span>
+                <button class="qb-svc" data-svc="👑 BARBA PREMIUM" data-price="$27.000">
+                  <span class="qb-svc-name">👑 BARBA PREMIUM</span>
                   <span class="qb-svc-price">$27.000</span>
                 </button>
-                <button class="qb-svc" data-svc="PERFILADO" data-price="$6.000">
-                  <span class="qb-svc-name">PERFILADO</span>
+                <button class="qb-svc" data-svc="✨ PERFILADO" data-price="$6.000">
+                  <span class="qb-svc-name">✨ PERFILADO</span>
                   <span class="qb-svc-price">$6.000</span>
                 </button>
               </div>
