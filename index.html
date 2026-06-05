@@ -10,7 +10,7 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Road+Rage&family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Road+Rage&family=Inter:wght@400;600;700;800&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
 
   <style>
     /* ══════════════════════════════════════════════
@@ -38,7 +38,7 @@
       --glass-bg-strong: rgba(10, 10, 10, 0.88);
       --glass-border: rgba(255, 255, 255, 0.07);
       --glass-border-hover: rgba(255, 255, 255, 0.13);
-      --glass-blur: blur(28px) saturate(180%);
+      --glass-blur: blur(18px) saturate(160%);
       --glass-blur-subtle: blur(18px) saturate(150%);
 
       /* Shadows */
@@ -112,7 +112,7 @@
     .glass-strong {
       background: var(--glass-bg-strong);
       backdrop-filter: blur(36px) saturate(200%);
-      -webkit-backdrop-filter: blur(36px) saturate(200%);
+      -webkit-backdrop-filter: blur(18px) saturate(170%);
       border: 1px solid rgba(255,255,255,0.08);
     }
 
@@ -413,7 +413,7 @@
       padding: 12px 0;
       background: var(--glass-bg-strong);
       backdrop-filter: blur(36px) saturate(200%);
-      -webkit-backdrop-filter: blur(36px) saturate(200%);
+      -webkit-backdrop-filter: blur(18px) saturate(170%);
       border-bottom: 1px solid rgba(255,255,255,0.06);
       box-shadow: 0 4px 30px rgba(0,0,0,0.5);
     }
@@ -550,7 +550,7 @@
       right: 0;
       background: var(--glass-bg-strong);
       backdrop-filter: blur(36px);
-      -webkit-backdrop-filter: blur(36px);
+      -webkit-backdrop-filter: blur(18px);
       border-bottom: 1px solid rgba(255,255,255,0.06);
       max-height: 0;
       overflow: hidden;
@@ -620,6 +620,7 @@
       position: absolute;
       inset: 0;
       overflow: hidden;
+      contain: strict;
     }
 
     /* ── Hero Orb: círculo grande que levita desde el centro ── */
@@ -635,11 +636,10 @@
         rgba(200,20,20,0.10) 26%,
         rgba(180,10,10,0.05) 50%,
         transparent 70%);
-      filter: blur(1px);
       pointer-events: none;
       transform: translate(-50%, -50%);
       animation: orb-levitate 9s ease-in-out infinite;
-      will-change: transform, opacity;
+      will-change: transform;
     }
 
     @keyframes orb-levitate {
@@ -661,7 +661,7 @@
       background: radial-gradient(circle at 50% 50%,
         rgba(220,38,38,0.065) 0%,
         transparent 65%);
-      filter: blur(55px);
+      filter: blur(40px);
       pointer-events: none;
       transform: translate(-50%, -50%);
       animation: orb-levitate 13s ease-in-out infinite reverse;
@@ -831,7 +831,7 @@
       50%       { box-shadow: var(--shadow-card), 0 0 32px rgba(220,38,38,0.16), 0 0 0 1px rgba(220,38,38,0.18); }
     }
     .stat-card {
-      animation: stat-border-glow 5s ease-in-out infinite;
+      animation: stat-border-glow 8s ease-in-out infinite;
     }
     .stat-float:nth-child(2) .stat-card { animation-delay: 1.2s; }
     .stat-float:nth-child(3) .stat-card { animation-delay: 2.4s; }
@@ -972,10 +972,10 @@
     @keyframes stat-mobile-float-3 { 0%,100%{transform:translateY(-2px)} 50%{transform:translateY(-7px)} }
     @keyframes stat-mobile-float-4 { 0%,100%{transform:translateY(-5px)} 50%{transform:translateY(2px)} }
 
-    .hero-stats-mobile .stat-mobile:nth-child(1) { animation: stat-mobile-float-1 7s ease-in-out infinite, stat-border-glow 5s ease-in-out infinite; }
-    .hero-stats-mobile .stat-mobile:nth-child(2) { animation: stat-mobile-float-2 9s ease-in-out infinite, stat-border-glow 5s ease-in-out infinite 1.2s; }
-    .hero-stats-mobile .stat-mobile:nth-child(3) { animation: stat-mobile-float-3 8s ease-in-out infinite, stat-border-glow 5s ease-in-out infinite 2.4s; }
-    .hero-stats-mobile .stat-mobile:nth-child(4) { animation: stat-mobile-float-4 10s ease-in-out infinite, stat-border-glow 5s ease-in-out infinite 3.6s; }
+    .hero-stats-mobile .stat-mobile:nth-child(1) { animation: stat-mobile-float-1 7s ease-in-out infinite; }
+    .hero-stats-mobile .stat-mobile:nth-child(2) { animation: stat-mobile-float-2 9s ease-in-out infinite; }
+    .hero-stats-mobile .stat-mobile:nth-child(3) { animation: stat-mobile-float-3 8s ease-in-out infinite; }
+    .hero-stats-mobile .stat-mobile:nth-child(4) { animation: stat-mobile-float-4 10s ease-in-out infinite; }
 
     .stat-mobile .val {
       font-family: var(--font-title);
@@ -1222,6 +1222,8 @@
        PORTFOLIO
     ══════════════════════════════════════════════ */
     #portafolio {
+      content-visibility: auto;
+      contain-intrinsic-size: 0 600px;
       position: relative;
       padding: 120px 0;
       background: var(--bg-deep);
@@ -1622,6 +1624,8 @@
        LOCATION
     ══════════════════════════════════════════════ */
     #ubicacion {
+      content-visibility: auto;
+      contain-intrinsic-size: 0 600px;
       position: relative;
       padding: 120px 0;
       background: var(--bg-deep);
@@ -1759,7 +1763,7 @@
       width: 700px;
       height: 200px;
       background: radial-gradient(ellipse, rgba(220,38,38,0.025) 0%, transparent 70%);
-      filter: blur(60px);
+      filter: blur(40px);
       pointer-events: none;
     }
 
@@ -2015,14 +2019,14 @@
       box-shadow:
         var(--shadow-card-hover),
         0 0 60px rgba(220,38,38,0.12),
-        0 0 120px rgba(220,38,38,0.06) !important;
+
       transition: box-shadow 0.6s ease;
     }
     .carousel-main:hover {
       box-shadow:
         var(--shadow-card-hover),
         0 0 80px rgba(220,38,38,0.2),
-        0 0 160px rgba(220,38,38,0.1) !important;
+
     }
 
     /* ── Service cards — glow suave hover ── */
@@ -2033,7 +2037,7 @@
       box-shadow:
         var(--shadow-card-hover),
         0 0 40px rgba(220,38,38,0.14),
-        0 0 80px rgba(220,38,38,0.07) !important;
+
       transform: translateY(-5px) scale(1.015) !important;
     }
 
@@ -2064,7 +2068,7 @@
         box-shadow: var(--shadow-card), 0 0 0 1px rgba(220,38,38,0.14), 0 0 30px rgba(220,38,38,0.1);
       }
     }
-    .info-card { animation: info-border-glow 6s ease-in-out infinite; }
+    .info-card { animation: info-border-glow 12s ease-in-out infinite; }
     .info-card:nth-child(2) { animation-delay: 2s; }
     .info-card:nth-child(3) { animation-delay: 4s; }
 
@@ -2073,14 +2077,14 @@
       box-shadow:
         var(--shadow-card-hover),
         0 0 60px rgba(220,38,38,0.08),
-        0 0 120px rgba(220,38,38,0.04) !important;
+
       transition: box-shadow 0.5s ease !important;
     }
     .booking-card:hover {
       box-shadow:
         var(--shadow-card-hover),
         0 0 80px rgba(220,38,38,0.13),
-        0 0 150px rgba(220,38,38,0.07) !important;
+
     }
 
     /* ── Borde de la tarjeta animado (shine border) ── */
@@ -2482,20 +2486,494 @@
       }
     }
     .info-card {
-      animation: info-glow-border 7s ease-in-out infinite !important;
+      animation: info-glow-border 12s ease-in-out infinite !important;
     }
-    .info-card:nth-child(2) { animation-delay: 2.3s !important; }
-    .info-card:nth-child(3) { animation-delay: 4.6s !important; }
+    .info-card:nth-child(2) { animation-delay: 4s !important; }
+    .info-card:nth-child(3) { animation-delay: 8s !important; }
 
+    /* ══════════════════════════════════════════════
+       PREMIUM LIQUID GLASS UPGRADE
+       Solo mejoras visuales — sin tocar funcionalidad
+    ══════════════════════════════════════════════ */
+
+    /* ── CSS vars adicionales para liquid glass ── */
+    :root {
+      --glass-specular: rgba(255,255,255,0.09);
+      --glass-edge: rgba(255,255,255,0.13);
+      --glass-edge-bottom: rgba(0,0,0,0.25);
+      --liquid-bg: rgba(14,14,14,0.72);
+      --liquid-blur: blur(32px) saturate(200%) brightness(1.04);
+      --red-glow-sm: 0 0 20px rgba(220,38,38,0.18), 0 0 40px rgba(220,38,38,0.08);
+      --red-glow-md: 0 0 40px rgba(220,38,38,0.22), 0 0 80px rgba(220,38,38,0.1);
+      --red-glow-lg: 0 0 70px rgba(220,38,38,0.28), 0 0 140px rgba(220,38,38,0.12);
+    }
+
+    /* ══ NAVBAR — liquid glass premium ══ */
+    #navbar {
+      background: transparent;
+      transition: all 0.5s cubic-bezier(0.16,1,0.3,1) !important;
+    }
+
+    #navbar.scrolled {
+      background: rgba(5,5,5,0.78) !important;
+      backdrop-filter: blur(14px) saturate(160%) !important;
+      -webkit-backdrop-filter: blur(14px) saturate(170%) !important;
+      border-bottom: 1px solid rgba(255,255,255,0.055) !important;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.04),
+        0 4px 32px rgba(0,0,0,0.6),
+        0 8px 64px rgba(0,0,0,0.3) !important;
+    }
+
+    /* Specular edge top */
+    #navbar.scrolled::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 30%, rgba(255,255,255,0.06) 70%, transparent 100%);
+      pointer-events: none;
+    }
+
+    /* Nav links — refined hover */
+    .nav-links a {
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      font-size: 12.5px;
+      transition: color 0.3s, text-shadow 0.3s !important;
+    }
+    .nav-links a:hover {
+      text-shadow: 0 0 20px rgba(255,255,255,0.25) !important;
+    }
+
+    /* Nav CTA button — liquid glass variant */
+    .nav-socials .btn-primary {
+      background: rgba(220,38,38,0.9) !important;
+      backdrop-filter: blur(12px) !important;
+      -webkit-backdrop-filter: blur(12px) !important;
+      border: 1px solid rgba(255,255,255,0.15) !important;
+      box-shadow: 0 4px 20px rgba(220,38,38,0.35), inset 0 1px 0 rgba(255,255,255,0.18) !important;
+    }
+    .nav-socials .btn-primary:hover {
+      background: rgba(220,38,38,1) !important;
+      box-shadow: 0 8px 36px rgba(220,38,38,0.5), inset 0 1px 0 rgba(255,255,255,0.22) !important;
+      transform: translateY(-2px) scale(1.03) !important;
+    }
+
+    /* ══ HERO — profundidad y atmósfera mejoradas ══ */
+
+    /* Grid más sutil y refinado */
+    .hero-grid {
+      background-image:
+        linear-gradient(rgba(255,255,255,0.032) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.032) 1px, transparent 1px) !important;
+      background-size: 72px 72px !important;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 40%, black 0%, transparent 100%) !important;
+    }
+
+    /* Eyebrow pill — liquid glass */
+    .hero-eyebrow {
+      background: rgba(220,38,38,0.07) !important;
+      backdrop-filter: blur(16px) saturate(180%) !important;
+      -webkit-backdrop-filter: blur(16px) saturate(170%) !important;
+      border: 1px solid rgba(220,38,38,0.2) !important;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 4px 16px rgba(220,38,38,0.1) !important;
+    }
+
+    /* Hero title — sombra de texto sutil */
+    .hero-title {
+      text-shadow: 0 2px 40px rgba(0,0,0,0.5), 0 0 80px rgba(220,38,38,0.08) !important;
+    }
+
+    /* Hero studio subtitle */
+    .hero-studio {
+      text-shadow: 0 0 40px rgba(255,255,255,0.06) !important;
+    }
+
+    /* CTA buttons — liquid premium */
+    .hero-buttons .btn-primary {
+      background: rgba(220,38,38,0.95) !important;
+      border: 1px solid rgba(255,255,255,0.14) !important;
+      box-shadow:
+        0 8px 32px rgba(220,38,38,0.4),
+        0 2px 8px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.2),
+        inset 0 -1px 0 rgba(0,0,0,0.15) !important;
+      transition: all 0.35s cubic-bezier(0.16,1,0.3,1) !important;
+    }
+    .hero-buttons .btn-primary:hover {
+      box-shadow:
+        0 14px 48px rgba(220,38,38,0.55),
+        0 4px 16px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.25),
+        inset 0 -1px 0 rgba(0,0,0,0.2) !important;
+      transform: translateY(-3px) scale(1.03) !important;
+    }
+    .hero-buttons .btn-primary:active {
+      transform: translateY(0) scale(0.97) !important;
+      box-shadow:
+        0 4px 16px rgba(220,38,38,0.3),
+        inset 0 2px 4px rgba(0,0,0,0.2) !important;
+    }
+
+    .hero-buttons .btn-glass {
+      background: rgba(18,18,18,0.55) !important;
+      backdrop-filter: blur(14px) saturate(160%) !important;
+      -webkit-backdrop-filter: blur(14px) saturate(170%) !important;
+      border: 1px solid rgba(255,255,255,0.1) !important;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.1),
+        inset 0 -1px 0 rgba(0,0,0,0.2),
+        0 8px 32px rgba(0,0,0,0.4) !important;
+    }
+    .hero-buttons .btn-glass:hover {
+      background: rgba(24,24,24,0.7) !important;
+      border-color: rgba(220,38,38,0.25) !important;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.13),
+        inset 0 -1px 0 rgba(0,0,0,0.25),
+        0 12px 40px rgba(0,0,0,0.5),
+        0 0 30px rgba(220,38,38,0.1) !important;
+    }
+
+    /* Stat cards — liquid glass profundo */
+    .stat-card {
+      background: rgba(10,10,10,0.78) !important;
+      backdrop-filter: blur(18px) saturate(180%) !important;
+      -webkit-backdrop-filter: blur(18px) saturate(170%) !important;
+      border: 1px solid rgba(255,255,255,0.1) !important;
+      box-shadow:
+        var(--shadow-card),
+        inset 0 1px 0 rgba(255,255,255,0.08),
+        inset 0 -1px 0 rgba(0,0,0,0.3),
+        0 0 30px rgba(220,38,38,0.07) !important;
+    }
+
+    /* ══ SERVICES — liquid glass refinado ══ */
+
+    /* Service items — triple layer glass */
+    .service-item {
+      background: rgba(12,12,12,0.7) !important;
+      backdrop-filter: blur(16px) saturate(170%) !important;
+      -webkit-backdrop-filter: blur(16px) saturate(170%) !important;
+      border: 1px solid rgba(255,255,255,0.07) !important;
+      box-shadow:
+        var(--shadow-card),
+        inset 0 1px 0 rgba(255,255,255,0.05),
+        0 0 0 0 rgba(220,38,38,0) !important;
+      transition: all 0.45s cubic-bezier(0.16,1,0.3,1) !important;
+    }
+
+    .service-item::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 40%, rgba(255,255,255,0.04) 70%, transparent 100%);
+      border-radius: 1px 1px 0 0;
+      pointer-events: none;
+    }
+
+    .service-item:hover {
+      background: rgba(18,18,18,0.82) !important;
+      border-color: rgba(220,38,38,0.2) !important;
+      box-shadow:
+        var(--shadow-card-hover),
+        inset 0 1px 0 rgba(255,255,255,0.09),
+        0 0 50px rgba(220,38,38,0.12),
+        0 0 100px rgba(220,38,38,0.05) !important;
+      transform: translateY(-3px) scale(1.01) !important;
+    }
+
+    /* ══ BOOKING CARD — liquid glass premium ══ */
+    .booking-card {
+      background: rgba(10,10,10,0.75) !important;
+      backdrop-filter: blur(20px) saturate(180%) !important;
+      -webkit-backdrop-filter: blur(18px) saturate(170%) !important;
+      border: 1px solid rgba(255,255,255,0.075) !important;
+      box-shadow:
+        0 32px 80px rgba(0,0,0,0.6),
+        0 8px 32px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.08),
+        inset 0 -1px 0 rgba(0,0,0,0.25),
+        0 0 60px rgba(220,38,38,0.07) !important;
+    }
+
+    /* Quick-book service pills — liquid glass */
+    .qb-svc {
+      background: rgba(16,16,16,0.65) !important;
+      backdrop-filter: blur(16px) !important;
+      -webkit-backdrop-filter: blur(16px) !important;
+      border: 1px solid rgba(255,255,255,0.07) !important;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04) !important;
+      transition: all 0.28s cubic-bezier(0.16,1,0.3,1) !important;
+    }
+    .qb-svc:hover {
+      background: rgba(220,38,38,0.09) !important;
+      border-color: rgba(220,38,38,0.22) !important;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.06),
+        0 0 20px rgba(220,38,38,0.1) !important;
+      transform: translateY(-2px) scale(1.02) !important;
+    }
+    .qb-svc.selected {
+      background: rgba(220,38,38,0.13) !important;
+      border-color: rgba(220,38,38,0.45) !important;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.08),
+        0 0 22px rgba(220,38,38,0.18),
+        0 0 40px rgba(220,38,38,0.08) !important;
+    }
+
+    /* Day/time buttons */
+    .qb-day, .qb-time {
+      background: rgba(16,16,16,0.6) !important;
+      backdrop-filter: blur(12px) !important;
+      -webkit-backdrop-filter: blur(12px) !important;
+      border: 1px solid rgba(255,255,255,0.065) !important;
+      transition: all 0.22s cubic-bezier(0.16,1,0.3,1) !important;
+    }
+    .qb-day:hover, .qb-time:hover {
+      background: rgba(220,38,38,0.09) !important;
+      border-color: rgba(220,38,38,0.22) !important;
+      transform: translateY(-1px) scale(1.04) !important;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3), 0 0 12px rgba(220,38,38,0.1) !important;
+    }
+    .qb-day.selected, .qb-time.selected {
+      background: var(--red) !important;
+      border-color: var(--red) !important;
+      box-shadow:
+        0 4px 18px rgba(220,38,38,0.45),
+        0 0 28px rgba(220,38,38,0.2),
+        inset 0 1px 0 rgba(255,255,255,0.25) !important;
+    }
+
+    /* Form inputs — liquid */
+    .form-input, .form-select, .admin-input {
+      background: rgba(255,255,255,0.035) !important;
+      backdrop-filter: blur(8px) !important;
+      -webkit-backdrop-filter: blur(8px) !important;
+      border: 1px solid rgba(255,255,255,0.065) !important;
+      transition: all 0.3s cubic-bezier(0.16,1,0.3,1) !important;
+    }
+    .form-input:focus, .form-select:focus {
+      background: rgba(255,255,255,0.055) !important;
+      border-color: rgba(220,38,38,0.45) !important;
+      box-shadow:
+        0 0 0 3px rgba(220,38,38,0.09),
+        0 0 20px rgba(220,38,38,0.12),
+        inset 0 1px 0 rgba(255,255,255,0.05) !important;
+    }
+
+    /* ══ INFO CARDS — ubicación ══ */
+    .info-card {
+      background: rgba(12,12,12,0.72) !important;
+      backdrop-filter: blur(16px) saturate(170%) !important;
+      -webkit-backdrop-filter: blur(16px) saturate(170%) !important;
+      border: 1px solid rgba(255,255,255,0.07) !important;
+      box-shadow:
+        var(--shadow-card),
+        inset 0 1px 0 rgba(255,255,255,0.05) !important;
+    }
+    .info-card:hover {
+      background: rgba(18,18,18,0.85) !important;
+      border-color: rgba(220,38,38,0.18) !important;
+      box-shadow:
+        var(--shadow-card-hover),
+        inset 0 1px 0 rgba(255,255,255,0.07),
+        0 0 36px rgba(220,38,38,0.1) !important;
+      transform: translateX(4px) !important;
+    }
+
+    /* Info icon — glass pill */
+    .info-icon {
+      background: rgba(220,38,38,0.09) !important;
+      border: 1px solid rgba(220,38,38,0.15) !important;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 0 16px rgba(220,38,38,0.08) !important;
+      transition: all 0.3s !important;
+    }
+    .info-card:hover .info-icon {
+      background: rgba(220,38,38,0.14) !important;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 0 24px rgba(220,38,38,0.15) !important;
+    }
+
+    /* ══ CAROUSEL NAV — glass buttons ══ */
+    .carousel-nav-btn {
+      background: rgba(8,8,8,0.75) !important;
+      backdrop-filter: blur(14px) saturate(160%) !important;
+      -webkit-backdrop-filter: blur(14px) saturate(170%) !important;
+      border: 1px solid rgba(255,255,255,0.1) !important;
+      box-shadow:
+        0 4px 20px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.09) !important;
+      transition: all 0.3s cubic-bezier(0.16,1,0.3,1) !important;
+    }
+    .carousel-nav-btn:hover {
+      background: rgba(220,38,38,0.18) !important;
+      border-color: rgba(220,38,38,0.3) !important;
+      box-shadow:
+        0 8px 28px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.12),
+        0 0 24px rgba(220,38,38,0.2) !important;
+      transform: translateY(-50%) scale(1.1) !important;
+    }
+
+    /* ══ MOBILE MENU — liquid glass ══ */
+    #mobile-menu {
+      background: rgba(4,4,4,0.9) !important;
+      backdrop-filter: blur(14px) saturate(160%) !important;
+      -webkit-backdrop-filter: blur(14px) saturate(170%) !important;
+      border-bottom: 1px solid rgba(255,255,255,0.055) !important;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.7) !important;
+    }
+
+    /* ══ SECTION LABELS — premium liquid pills ══ */
+    .section-label {
+      background: rgba(220,38,38,0.07) !important;
+      backdrop-filter: blur(12px) !important;
+      -webkit-backdrop-filter: blur(12px) !important;
+      border: 1px solid rgba(220,38,38,0.18) !important;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.07),
+        0 4px 16px rgba(220,38,38,0.08) !important;
+    }
+
+    /* ══ BOTÓN WA FLOTANTE — premium pulse ══ */
+    #wa-btn {
+      background: linear-gradient(145deg, #28d96a, #22c55e) !important;
+      box-shadow:
+        0 8px 32px rgba(37,211,102,0.4),
+        0 2px 8px rgba(0,0,0,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.25) !important;
+      border: 1px solid rgba(255,255,255,0.15) !important;
+    }
+    #wa-btn:hover {
+      box-shadow:
+        0 14px 48px rgba(37,211,102,0.55),
+        0 4px 16px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.3) !important;
+      transform: translateY(-3px) scale(1.07) !important;
+    }
+
+    /* Admin open button */
+    .admin-open-btn {
+      backdrop-filter: blur(20px) !important;
+      -webkit-backdrop-filter: blur(18px) !important;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05) !important;
+    }
+
+    /* ══ FOOTER — liquid glass refinado ══ */
+    footer {
+      border-top: 1px solid rgba(255,255,255,0.05) !important;
+    }
+    footer::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(220,38,38,0.15) 30%, rgba(220,38,38,0.08) 70%, transparent);
+      pointer-events: none;
+    }
+    .footer-divider {
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06) 30%, rgba(255,255,255,0.06) 70%, transparent) !important;
+    }
+
+    /* ══ ANIMACIONES SCROLL — más fluidas ══ */
+    .reveal, .reveal-scale {
+      transition:
+        opacity 0.85s cubic-bezier(0.16,1,0.3,1),
+        transform 0.85s cubic-bezier(0.16,1,0.3,1),
+        filter 0.85s cubic-bezier(0.16,1,0.3,1) !important;
+    }
+
+    /* ══ GLOBAL BTN ACTIVE — feedback táctil ══ */
+    button:active:not(:disabled),
+    .btn:active {
+      transform: scale(0.97) !important;
+      filter: brightness(0.92) !important;
+      transition: transform 0.08s, filter 0.08s !important;
+    }
+
+
+    /* ══ AMBIENT SPOTLIGHT en secciones ══ */
+    #servicios::before {
+      content: '';
+      position: absolute;
+      top: -20%; left: 50%;
+      transform: translateX(-50%);
+      width: 600px; height: 400px;
+      background: radial-gradient(ellipse, rgba(220,38,38,0.035) 0%, transparent 70%);
+      filter: blur(40px);
+      pointer-events: none;
+    }
+
+    #reservar::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 700px; height: 300px;
+      background: radial-gradient(ellipse, rgba(220,38,38,0.04) 0%, transparent 70%);
+      filter: blur(80px);
+      pointer-events: none;
+    }
+
+    /* ══ SEPARADORES de sección ══ */
+    .service-sep-line {
+      background: linear-gradient(90deg, transparent, rgba(220,38,38,0.12), transparent) !important;
+    }
+
+    /* ══ QBSUMMARY — liquid pill ══ */
+    .qb-summary {
+      background: rgba(220,38,38,0.06) !important;
+      backdrop-filter: blur(12px) !important;
+      -webkit-backdrop-filter: blur(12px) !important;
+      border: 1px solid rgba(220,38,38,0.16) !important;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 16px rgba(220,38,38,0.08) !important;
+    }
+
+    /* ══ STEP INDICATOR — active glow ══ */
+    .qb-step.active span {
+      box-shadow:
+        0 0 20px rgba(220,38,38,0.5),
+        0 0 40px rgba(220,38,38,0.2),
+        inset 0 1px 0 rgba(255,255,255,0.25) !important;
+    }
+
+    /* ══ MAP WRAP — liquid border ══ */
+    .map-wrap {
+      border: 1px solid rgba(255,255,255,0.07) !important;
+      box-shadow:
+        var(--shadow-card-hover),
+        inset 0 1px 0 rgba(255,255,255,0.05),
+        0 0 60px rgba(220,38,38,0.08) !important;
+    }
+
+    /* ══ NOISE TEXTURE — más refinada ══ */
+    body::after {
+      opacity: 0.25 !important;
+      mix-blend-mode: overlay !important;
+    }
+
+
+    /* ══ PREFERS-REDUCED-MOTION — respeta preferencias del SO ══ */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.1s !important;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <!-- Custom Cursor -->
+  <!-- Custom Cursor (legacy, hidden) -->
   <div id="cursor">
     <div id="cursor-ring"></div>
     <div id="cursor-dot"></div>
   </div>
+
 
   <!-- ════════════════════════════ NAVBAR ════════════════════════════ -->
   <nav id="navbar">
@@ -2681,7 +3159,7 @@
     <div class="portfolio-bottom-fade"></div>
 
     <!-- bg glows -->
-    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:900px;height:900px;background:radial-gradient(circle,rgba(220,38,38,0.025) 0%,transparent 65%);filter:blur(80px);pointer-events:none;animation:glow-breathe 8s ease-in-out infinite;"></div>
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:900px;height:900px;background:radial-gradient(circle,rgba(220,38,38,0.025) 0%,transparent 65%);filter:blur(60px);pointer-events:none;animation:glow-breathe 10s ease-in-out infinite;"></div>
 
     <div class="container">
       <div class="portfolio-header reveal">
@@ -3763,11 +4241,16 @@
     async function adminCancelarReserva(dk, t) {
       if (!confirm('¿Cancelar esta reserva y liberar el horario?')) return;
       const tk = t.replace(':', '_');
-      await fbDelete('/reservas/' + dk + '/' + tk);
+      // Eliminar la reserva Y el bloqueo correspondiente (si existe)
+      await Promise.all([
+        fbDelete('/reservas/' + dk + '/' + tk),
+        fbDelete('/bloqueados/' + dk + '/' + tk)
+      ]);
       await loadReservas();
       showToast('Reserva cancelada y horario liberado.');
       renderAdminStats();
       renderAdminReservas();
+      renderAdminBloqueados();
     }
 
     async function adminBloquear() {
