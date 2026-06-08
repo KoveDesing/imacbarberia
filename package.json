@@ -1,0 +1,27 @@
+{
+  "name": "imacbarberia",
+  "version": "1.0.0",
+  "description": "IMAC Barber Studio - Barbería Premium en Piedecuesta",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"No tests specified\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KoveDesing/imacbarberia.git"
+  },
+  "keywords": [
+    "barberia",
+    "imac",
+    "piedecuesta"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KoveDesing/imacbarberia/issues"
+  },
+  "homepage": "https://github.com/KoveDesing/imacbarberia#readme",
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
+  }
+}
