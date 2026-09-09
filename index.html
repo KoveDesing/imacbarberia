@@ -3834,164 +3834,148 @@
         .qb-time-loading { display:flex;align-items:center;gap:8px;color:var(--gray);font-size:13px;padding:20px 0; }
         .spinner-sm { width:14px;height:14px;border:2px solid rgba(220,38,38,0.2);border-top-color:var(--red);border-radius:50%;animation:spin-slow .8s linear infinite; }
         .form-input { margin-bottom:0; }
-        /* ══════════════ ADMIN PANEL — Neomorphism rojo ══════════════ */
-        #admin-panel { display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.94);backdrop-filter:blur(20px);overflow-y:auto;padding:20px; }
+        /* ══════════════ ADMIN PANEL — Minimalista, estilo glass de la marca ══════════════ */
+        #admin-panel { display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.9);backdrop-filter:blur(20px);overflow-y:auto;padding:20px; }
         #admin-panel.open { display:block; }
 
         .admin-wrap {
-          max-width:920px;margin:0 auto;padding:34px;border-radius:28px;
-          background:linear-gradient(155deg,#161010,#0a0707);
-          border:1px solid rgba(255,255,255,.04);
-          box-shadow:22px 22px 54px rgba(0,0,0,.6), -10px -10px 32px rgba(255,255,255,.015);
+          max-width:900px;margin:0 auto;padding:32px;border-radius:22px;
+          background:var(--glass-bg-strong);
+          border:1px solid var(--glass-border);
+          box-shadow:var(--shadow-card);
         }
 
         /* Header / perfil */
-        .admin-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px; }
-        .admin-profile { display:flex;align-items:center;gap:16px;min-width:0; }
+        .admin-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:26px;flex-wrap:wrap;gap:12px; }
+        .admin-profile { display:flex;align-items:center;gap:14px;min-width:0; }
         .admin-logo {
-          width:56px;height:56px;border-radius:50%;flex-shrink:0;padding:5px;
-          background:linear-gradient(155deg,#1c1414,#090505);
-          box-shadow:6px 6px 14px rgba(0,0,0,.65), -4px -4px 12px rgba(255,255,255,.03), inset 0 0 0 1px rgba(220,38,38,.18);
+          width:50px;height:50px;border-radius:50%;flex-shrink:0;padding:3px;
+          background:rgba(255,255,255,.04);border:1px solid var(--glass-border);
         }
         .admin-logo img { width:100%;height:100%;object-fit:contain;border-radius:50%;display:block; }
-        .admin-greeting { font-family:var(--font-title);font-size:19px;font-weight:800;color:var(--white);line-height:1.2;letter-spacing:-.01em; }
-        .admin-subgreeting { font-size:12px;color:var(--gray);margin-top:3px; }
+        .admin-greeting { font-family:var(--font-title);font-size:18px;font-weight:800;color:var(--white);line-height:1.2;letter-spacing:-.01em; }
+        .admin-subgreeting { font-size:12px;color:var(--gray);margin-top:2px; }
         .admin-icon-btn {
-          padding:9px 16px;border-radius:12px;font-size:12px;color:var(--gray);cursor:pointer;
-          font-family:var(--font-title);border:none;background:linear-gradient(155deg,#181111,#0b0707);
-          box-shadow:4px 4px 10px rgba(0,0,0,.6), -3px -3px 8px rgba(255,255,255,.02);
-          transition:color .2s;
+          padding:8px 14px;border-radius:9px;font-size:12px;color:var(--gray);cursor:pointer;
+          font-family:var(--font-title);border:1px solid var(--glass-border);background:transparent;
+          transition:color .2s,border-color .2s;
         }
-        .admin-icon-btn:hover { color:#fff; }
+        .admin-icon-btn:hover { color:#fff;border-color:rgba(220,38,38,.3); }
         .admin-close {
-          width:40px;height:40px;border-radius:50%;border:none;color:var(--gray);font-size:16px;cursor:pointer;
-          display:flex;align-items:center;justify-content:center;
-          background:linear-gradient(155deg,#181111,#0b0707);
-          box-shadow:4px 4px 10px rgba(0,0,0,.6), -3px -3px 8px rgba(255,255,255,.02);
-          transition:color .2s;
+          width:36px;height:36px;border-radius:50%;border:1px solid var(--glass-border);color:var(--gray);font-size:15px;cursor:pointer;
+          display:flex;align-items:center;justify-content:center;background:transparent;
+          transition:color .2s,border-color .2s;
         }
-        .admin-close:hover { color:#fff; }
+        .admin-close:hover { color:#fff;border-color:rgba(255,255,255,.25); }
 
         /* Tabs */
-        .admin-tabs { display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap; }
+        .admin-tabs { display:flex;gap:6px;margin-bottom:22px;flex-wrap:wrap; }
         .admin-tab {
-          padding:9px 18px;border-radius:12px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;
+          padding:8px 16px;border-radius:9px;font-size:12.5px;font-weight:600;cursor:pointer;
           color:var(--gray);font-family:var(--font-title);transition:all .2s;
-          background:linear-gradient(155deg,#181111,#0b0707);
-          box-shadow:4px 4px 10px rgba(0,0,0,.6), -3px -3px 8px rgba(255,255,255,.02);
+          background:transparent;border:1px solid var(--glass-border);
         }
-        .admin-tab.active {
-          color:#fff;background:linear-gradient(155deg,var(--red),var(--red-dark));
-          box-shadow:inset 2px 2px 6px rgba(0,0,0,.35), inset -2px -2px 6px rgba(255,255,255,.08), 5px 5px 14px rgba(220,38,38,.25);
-        }
-        .admin-tab:hover:not(.active) { color:var(--white); }
+        .admin-tab.active { color:#fff;background:var(--red);border-color:var(--red); }
+        .admin-tab:hover:not(.active) { color:var(--white);border-color:rgba(255,255,255,.2); }
         .admin-section { display:none; }
         .admin-section.active { display:block; }
 
         /* Stat cards */
-        .admin-stats { display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:20px; }
+        .admin-stats { display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;margin-bottom:20px; }
         .admin-stat {
-          border-radius:18px;padding:20px 16px;text-align:center;border:none;
-          background:linear-gradient(155deg,#181111,#0b0707);
-          box-shadow:7px 7px 16px rgba(0,0,0,.6), -5px -5px 14px rgba(255,255,255,.02), inset 0 0 0 1px rgba(220,38,38,.05);
+          border-radius:14px;padding:16px 12px;text-align:center;
+          background:rgba(255,255,255,.03);border:1px solid var(--glass-border);
+          transition:border-color .2s;
         }
-        .admin-stat-num { font-family:var(--font-title);font-size:26px;font-weight:800;color:var(--white);line-height:1.15;margin-bottom:5px;letter-spacing:-.01em; }
-        .admin-stat-label { font-size:10.5px;color:var(--gray);font-family:var(--font-title);text-transform:uppercase;letter-spacing:.06em; }
+        .admin-stat:hover { border-color:rgba(220,38,38,.25); }
+        .admin-stat-num { font-family:var(--font-title);font-size:20px;font-weight:800;color:var(--white);line-height:1.25;margin-bottom:6px;word-break:break-word; }
+        .admin-stat-label { font-size:10px;color:var(--gray);font-family:var(--font-title);text-transform:uppercase;letter-spacing:.04em;line-height:1.4; }
         .admin-stat.money .admin-stat-num { color:var(--red); }
+        .admin-stat-svc { display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13px !important; }
 
         /* Gráfico de ingresos mensuales */
         .admin-chart-card {
-          border-radius:20px;padding:20px 22px;margin-bottom:24px;border:none;
-          background:linear-gradient(155deg,#161010,#0a0707);
-          box-shadow:inset 3px 3px 10px rgba(0,0,0,.5), inset -3px -3px 10px rgba(255,255,255,.015);
+          border-radius:16px;padding:18px 20px;margin-bottom:22px;
+          background:rgba(255,255,255,.02);border:1px solid var(--glass-border);
         }
-        .admin-chart { display:flex;align-items:flex-end;gap:16px;height:104px;margin-top:14px;padding:0 8px; }
+        .admin-chart { display:flex;align-items:flex-end;gap:16px;height:100px;margin-top:14px;padding:0 8px; }
         .admin-chart-col { flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0;max-width:90px; }
-        .admin-chart-bar { width:100%;background:linear-gradient(180deg,var(--red),var(--red-dark));border-radius:8px 8px 3px 3px;min-height:4px;transition:height .5s cubic-bezier(.16,1,.3,1); }
+        .admin-chart-bar { width:100%;background:var(--red);border-radius:6px 6px 2px 2px;min-height:4px;transition:height .5s cubic-bezier(.16,1,.3,1),background .2s; }
+        .admin-chart-col:hover .admin-chart-bar { background:var(--red-dark); }
         .admin-chart-val { font-size:12px;color:var(--white);font-weight:700;margin-bottom:6px;font-family:var(--font-title);white-space:nowrap; }
         .admin-chart-label { font-size:11px;color:var(--gray);margin-top:8px;font-family:var(--font-title);text-transform:capitalize; }
 
         /* Tabla semanal */
+        .admin-week-wrap { border-radius:16px;padding:6px 4px;background:rgba(255,255,255,.02);border:1px solid var(--glass-border); }
         .admin-week-table { width:100%;border-collapse:collapse; }
         .admin-week-table th {
-          text-align:left;font-family:var(--font-title);font-size:10.5px;color:var(--gray);
-          text-transform:uppercase;letter-spacing:.06em;font-weight:700;padding:0 14px 10px;
+          text-align:left;font-family:var(--font-title);font-size:10px;color:var(--gray);
+          text-transform:uppercase;letter-spacing:.05em;font-weight:700;padding:10px 14px;
         }
-        .admin-week-table td { font-family:var(--font-body);font-size:13.5px;color:rgba(255,255,255,.8);padding:13px 14px; }
-        .admin-week-table tr:not(:last-child) td { border-bottom:1px solid rgba(255,255,255,.04); }
-        .admin-week-table tbody tr { border-radius:12px; }
+        .admin-week-table td { font-family:var(--font-body);font-size:13.5px;color:rgba(255,255,255,.8);padding:12px 14px; }
+        .admin-week-table tr:not(:last-child) td { border-bottom:1px solid rgba(255,255,255,.05); }
+        .admin-week-table tbody tr:hover td { background:rgba(255,255,255,.02); }
         .admin-week-table tbody tr td:first-child { font-family:var(--font-title);font-weight:600;color:var(--white); }
-        .admin-week-today td { color:#fff !important; }
-        .admin-week-total td { font-family:var(--font-title);font-weight:800;color:var(--white) !important;border-top:1px solid rgba(220,38,38,.18);padding-top:16px; }
+        .admin-week-total td { font-family:var(--font-title);font-weight:800;color:var(--white) !important;border-top:1px solid rgba(220,38,38,.2) !important; }
         .admin-week-total td:last-child { color:var(--red) !important; }
-        .admin-week-wrap {
-          border-radius:20px;padding:8px 6px;
-          background:linear-gradient(155deg,#161010,#0a0707);
-          box-shadow:inset 3px 3px 10px rgba(0,0,0,.5), inset -3px -3px 10px rgba(255,255,255,.015);
-        }
 
         /* Reservas / clientes */
         .reserva-card, .admin-client-card {
-          border-radius:16px;padding:16px 18px;margin-bottom:10px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border:none;
-          background:linear-gradient(155deg,#161010,#0a0707);
-          box-shadow:6px 6px 14px rgba(0,0,0,.55), -4px -4px 12px rgba(255,255,255,.02);
+          border-radius:14px;padding:15px 16px;margin-bottom:8px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+          background:rgba(255,255,255,.025);border:1px solid var(--glass-border);
+          transition:border-color .2s;
         }
+        .reserva-card:hover, .admin-client-card:hover { border-color:rgba(220,38,38,.2); }
         .admin-client-card { align-items:center;flex-wrap:wrap; }
         .reserva-name { font-family:var(--font-title);font-size:14px;font-weight:700;color:var(--white);margin-bottom:3px; }
         .reserva-meta { font-size:12px;color:var(--gray);line-height:1.7; }
         .reserva-meta span { color:rgba(255,255,255,.65); }
-        .reserva-badge { font-size:11px;font-weight:600;padding:4px 10px;border-radius:8px;background:rgba(255,255,255,.04);color:rgba(255,255,255,.55);white-space:nowrap;flex-shrink:0;font-family:var(--font-title); }
+        .reserva-badge { font-size:11px;font-weight:600;padding:4px 10px;border-radius:7px;background:rgba(255,255,255,.05);color:rgba(255,255,255,.55);white-space:nowrap;flex-shrink:0;font-family:var(--font-title); }
         .reserva-badge.blocked { color:rgba(220,100,100,.9); }
         .btn-admin-cancel {
-          padding:7px 15px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;border:none;color:rgba(255,255,255,.75);
-          font-family:var(--font-title);background:linear-gradient(155deg,#1c1010,#0d0606);
-          box-shadow:3px 3px 8px rgba(0,0,0,.6), -2px -2px 6px rgba(255,255,255,.02);
-          transition:color .2s;
+          padding:7px 14px;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer;color:rgba(255,255,255,.7);
+          font-family:var(--font-title);background:transparent;border:1px solid var(--glass-border);
+          transition:color .2s,border-color .2s;
         }
-        .btn-admin-cancel:hover { color:var(--red); }
-        .empty-state { text-align:center;padding:48px 20px;color:var(--gray);font-size:14px;font-family:var(--font-title); }
+        .btn-admin-cancel:hover { color:var(--red);border-color:rgba(220,38,38,.3); }
+        .empty-state { text-align:center;padding:44px 20px;color:var(--gray);font-size:14px;font-family:var(--font-title); }
 
         .admin-client-left { display:flex;align-items:center;gap:12px;min-width:0; }
         .admin-client-avatar {
-          width:38px;height:38px;border-radius:50%;flex-shrink:0;color:var(--red);
+          width:36px;height:36px;border-radius:50%;flex-shrink:0;color:var(--red);
           font-family:var(--font-title);font-weight:700;font-size:13px;
           display:flex;align-items:center;justify-content:center;
-          background:linear-gradient(155deg,#1c1010,#0d0606);
-          box-shadow:3px 3px 8px rgba(0,0,0,.6), -2px -2px 6px rgba(255,255,255,.02);
+          background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.2);
         }
         .admin-client-name { font-family:var(--font-title);font-size:14px;font-weight:700;color:var(--white);display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
         .admin-client-meta { font-size:12px;color:var(--gray);margin-top:3px; }
-        .admin-client-badge { font-size:9.5px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(220,38,38,.12);color:var(--red);white-space:nowrap;font-family:var(--font-title);text-transform:uppercase;letter-spacing:.03em; }
+        .admin-client-badge { font-size:9.5px;font-weight:700;padding:3px 7px;border-radius:5px;background:rgba(220,38,38,.12);color:var(--red);white-space:nowrap;font-family:var(--font-title);text-transform:uppercase;letter-spacing:.03em; }
         .admin-client-right { text-align:right;flex-shrink:0; }
         .admin-client-spent { font-family:var(--font-title);font-size:15px;font-weight:800;color:var(--white); }
         .admin-client-visits { font-size:11px;color:var(--gray); }
 
         .admin-top-row {
-          display:flex;align-items:center;justify-content:space-between;gap:10px;border-radius:14px;padding:13px 16px;margin-bottom:9px;border:none;
-          background:linear-gradient(155deg,#161010,#0a0707);
-          box-shadow:5px 5px 12px rgba(0,0,0,.55), -3px -3px 10px rgba(255,255,255,.02);
+          display:flex;align-items:center;justify-content:space-between;gap:10px;border-radius:12px;padding:12px 15px;margin-bottom:8px;
+          background:rgba(220,38,38,.04);border:1px solid rgba(220,38,38,.12);
         }
 
         /* Formularios / botones */
         .admin-bloqueo-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px; }
         @media(max-width:520px){ .admin-bloqueo-grid{grid-template-columns:1fr;} }
         .admin-input {
-          width:100%;padding:12px 15px;border-radius:12px;color:var(--white);font-size:14px;
-          font-family:var(--font-body);outline:none;border:none;
-          background:linear-gradient(155deg,#0a0707,#141010);
-          box-shadow:inset 3px 3px 8px rgba(0,0,0,.55), inset -2px -2px 6px rgba(255,255,255,.015);
+          width:100%;padding:11px 14px;border-radius:10px;color:var(--white);font-size:14px;
+          font-family:var(--font-body);outline:none;background:rgba(255,255,255,.03);border:1px solid var(--glass-border);
+          transition:border-color .2s;
         }
+        .admin-input:focus { border-color:rgba(220,38,38,.4); }
         .admin-input option { background:#141010; }
         .admin-bloqueo-btn {
-          padding:13px 20px;border-radius:12px;color:#fff;border:none;cursor:pointer;
+          padding:12px 20px;border-radius:10px;color:#fff;border:none;cursor:pointer;
           font-family:var(--font-title);font-size:14px;font-weight:700;width:100%;margin-top:4px;
-          background:linear-gradient(155deg,var(--red),var(--red-dark));
-          box-shadow:6px 6px 14px rgba(220,38,38,.22), -3px -3px 10px rgba(255,255,255,.02), inset 0 1px 0 rgba(255,255,255,.08);
-          transition:transform .15s;
+          background:var(--red);box-shadow:var(--shadow-btn);transition:background .2s,transform .15s;
         }
-        .admin-bloqueo-btn:hover { transform:translateY(-1px); }
-        .admin-bloqueo-btn:active { transform:translateY(0);box-shadow:inset 3px 3px 8px rgba(0,0,0,.3), inset -2px -2px 6px rgba(255,255,255,.05); }
-        .admin-section-title { font-family:var(--font-title);font-size:11.5px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;margin-top:22px; }
+        .admin-bloqueo-btn:hover { background:var(--red-dark);transform:translateY(-1px); }
+        .admin-section-title { font-family:var(--font-title);font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px;margin-top:20px; }
 
         /* Login */
         .admin-pwd-wrap { max-width:320px;margin:60px auto;text-align:center; }
@@ -4001,12 +3985,11 @@
 
         .admin-open-btn {
           position:fixed;bottom:110px;right:24px;z-index:200;width:48px;height:48px;border-radius:50%;
-          color:var(--gray);display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;
-          background:linear-gradient(155deg,#181111,#0a0505);
-          box-shadow:6px 6px 14px rgba(0,0,0,.55), -4px -4px 12px rgba(255,255,255,.02);
-          transition:color .25s;
+          color:var(--gray);display:flex;align-items:center;justify-content:center;cursor:pointer;
+          background:rgba(10,10,10,.9);border:1px solid var(--glass-border);box-shadow:0 4px 20px rgba(0,0,0,.5);
+          transition:color .2s,border-color .2s;
         }
-        .admin-open-btn:hover { color:var(--white); }
+        .admin-open-btn:hover { color:var(--white);border-color:rgba(220,38,38,.3); }
       `;
       document.head.appendChild(s);
     })();
@@ -4672,11 +4655,11 @@
       const fmt = n => '$' + n.toLocaleString('es-CO');
 
       document.getElementById('admin-stats-row').innerHTML = `
-        <div class="admin-stat money"><div class="admin-stat-num">${fmt(ingresos90)}</div><div class="admin-stat-label">Ingresos · 90 días</div></div>
-        <div class="admin-stat money"><div class="admin-stat-num">${fmt(promedioMensual)}</div><div class="admin-stat-label">Promedio mensual aprox.</div></div>
-        <div class="admin-stat"><div class="admin-stat-num">${clientesSet.size}</div><div class="admin-stat-label">Clientes · 90 días</div></div>
+        <div class="admin-stat money"><div class="admin-stat-num">${fmt(ingresos90)}</div><div class="admin-stat-label">Últimos 90 días</div></div>
+        <div class="admin-stat money"><div class="admin-stat-num">${fmt(promedioMensual)}</div><div class="admin-stat-label">Promedio mensual</div></div>
+        <div class="admin-stat"><div class="admin-stat-num">${clientesSet.size}</div><div class="admin-stat-label">Clientes</div></div>
         <div class="admin-stat"><div class="admin-stat-num">${hoy}</div><div class="admin-stat-label">Citas hoy</div></div>
-        <div class="admin-stat"><div class="admin-stat-num" style="font-size:14px;line-height:1.3;padding-top:6px;">${escapeHtml(servicioTop)}</div><div class="admin-stat-label">Servicio top</div></div>
+        <div class="admin-stat"><div class="admin-stat-num admin-stat-svc">${escapeHtml(servicioTop)}</div><div class="admin-stat-label">Servicio top</div></div>
       `;
     }
 
