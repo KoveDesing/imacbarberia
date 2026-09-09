@@ -3732,49 +3732,86 @@
     // Sin SDK, sin dependencias, funciona en cualquier hosting
     // ══════════════════════════════════════════
     const FB_URL = 'https://imac-barberia-default-rtdb.firebaseio.com';
-    let _reservas = {};
-    let _bloqueados = {};
+    // Web API Key del proyecto (Firebase Console → Configuración del proyecto → General).
+    // Esta clave NO es secreta, se puede publicar: solo identifica el proyecto.
+    // Lo que la protege de verdad son las Reglas de Seguridad de la base de datos.
+    const FB_API_KEY = 'AIzaSyBoWDvnIJgu1-UGY7RmMN24bw35nZLwk-k';
 
-    async function fbGet(path) {
-      const r = await fetch(FB_URL + path + '.json');
+    let _reservas = {};    // datos completos (nombre/teléfono) — solo se cargan si hay sesión admin
+    let _ocupados = {};    // solo boolean por horario — público, sin datos personales
+    let _bloqueados = {};
+    let _adminIdToken = null;
+
+    // auth=true añade el token del admin autenticado a la petición (necesario
+    // para leer /reservas completas o escribir /bloqueados y /perfil según las reglas)
+    function fbUrl(path, auth) {
+      return FB_URL + path + '.json' + (auth && _adminIdToken ? ('?auth=' + _adminIdToken) : '');
+    }
+    async function fbGet(path, auth) {
+      const r = await fetch(fbUrl(path, auth));
       return r.ok ? (await r.json() || {}) : {};
     }
-    async function fbSet(path, data) {
-      await fetch(FB_URL + path + '.json', { method: 'PUT', body: JSON.stringify(data) });
+    async function fbSet(path, data, auth) {
+      await fetch(fbUrl(path, auth), { method: 'PUT', body: JSON.stringify(data) });
     }
-    async function fbDelete(path) {
-      await fetch(FB_URL + path + '.json', { method: 'DELETE' });
+    async function fbDelete(path, auth) {
+      await fetch(fbUrl(path, auth), { method: 'DELETE' });
     }
     // Transacción: escribe solo si el nodo no existe (retorna true si tuvo éxito)
-    async function fbWriteIfEmpty(path, data) {
-      // Leer primero
-      const existing = await fetch(FB_URL + path + '.json');
+    async function fbWriteIfEmpty(path, data, auth) {
+      const existing = await fetch(fbUrl(path, auth));
       const val = await existing.json();
       if (val !== null) return false; // ya ocupado
-      // Escribir
-      const res = await fetch(FB_URL + path + '.json', { method: 'PUT', body: JSON.stringify(data) });
+      const res = await fetch(fbUrl(path, auth), { method: 'PUT', body: JSON.stringify(data) });
       return res.ok;
     }
 
-    async function loadReservas() {
-      const [r, b] = await Promise.all([fbGet('/reservas'), fbGet('/bloqueados')]);
-      _reservas = r || {};
+    // ── Disponibilidad pública (sin datos de clientes) — usado por el widget de reservas ──
+    async function loadDisponibilidad() {
+      const [o, b] = await Promise.all([fbGet('/ocupados'), fbGet('/bloqueados')]);
+      _ocupados = o || {};
       _bloqueados = b || {};
+    }
+
+    // ── Datos completos de reservas (nombre/teléfono) — solo con sesión admin activa ──
+    async function loadReservasAdmin() {
+      _reservas = await fbGet('/reservas', true);
+    }
+
+    // Se mantiene por compatibilidad: el flujo público solo necesita disponibilidad
+    async function loadReservas() {
+      await loadDisponibilidad();
     }
 
     function isSlotBooked(dateKey, time) {
       const tk = time.replace(':', '_');
-      return !!(_reservas[dateKey] && _reservas[dateKey][tk]) ||
+      return !!(_ocupados[dateKey] && _ocupados[dateKey][tk]) ||
              !!(_bloqueados[dateKey] && _bloqueados[dateKey][tk]);
     }
 
     async function bookSlot(dateKey, time, nombre, telefono, servicio) {
       const tk = time.replace(':', '_');
-      const path = '/reservas/' + dateKey + '/' + tk;
-      const data = { nombre, telefono, servicio, fechaStr: QB.date, horaStr: to12h(time), timestamp: new Date().toISOString(), id: Date.now().toString(36) };
-      const ok = await fbWriteIfEmpty(path, data);
-      if (ok) await loadReservas();
+      // 1) Marca el horario como ocupado (público, sin datos personales, "crear solo una vez")
+      const ok = await fbWriteIfEmpty('/ocupados/' + dateKey + '/' + tk, true);
+      if (ok) {
+        // 2) Guarda los datos completos del cliente (las reglas permiten crear, no leer/editar)
+        const data = { nombre, telefono, servicio, fechaStr: QB.date, horaStr: to12h(time), timestamp: new Date().toISOString(), id: Date.now().toString(36) };
+        await fbSet('/reservas/' + dateKey + '/' + tk, data);
+        await loadDisponibilidad();
+      }
       return ok;
+    }
+
+    // ── Login real del admin contra Firebase Authentication ──
+    async function fbSignIn(email, password) {
+      const res = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=' + FB_API_KEY, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, returnSecureToken: true })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error((data.error && data.error.message) || 'Error de autenticación');
+      return data.idToken;
     }
 
     function showToast(msg) {
@@ -3797,49 +3834,179 @@
         .qb-time-loading { display:flex;align-items:center;gap:8px;color:var(--gray);font-size:13px;padding:20px 0; }
         .spinner-sm { width:14px;height:14px;border:2px solid rgba(220,38,38,0.2);border-top-color:var(--red);border-radius:50%;animation:spin-slow .8s linear infinite; }
         .form-input { margin-bottom:0; }
-        /* ADMIN PANEL */
-        #admin-panel { display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.93);backdrop-filter:blur(20px);overflow-y:auto;padding:20px; }
+        /* ══════════════ ADMIN PANEL — Neomorphism rojo ══════════════ */
+        #admin-panel { display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.94);backdrop-filter:blur(20px);overflow-y:auto;padding:20px; }
         #admin-panel.open { display:block; }
-        .admin-wrap { max-width:920px;margin:0 auto;background:rgba(10,10,10,.99);border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:32px;box-shadow:0 30px 80px rgba(0,0,0,.8); }
+
+        .admin-wrap {
+          max-width:920px;margin:0 auto;padding:34px;border-radius:28px;
+          background:linear-gradient(155deg,#161010,#0a0707);
+          border:1px solid rgba(255,255,255,.04);
+          box-shadow:22px 22px 54px rgba(0,0,0,.6), -10px -10px 32px rgba(255,255,255,.015);
+        }
+
+        /* Header / perfil */
         .admin-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px; }
-        .admin-title { font-family:var(--font-title);font-size:20px;font-weight:800;color:var(--white);display:flex;align-items:center;gap:10px; }
-        .admin-title .rdot { width:10px;height:10px;border-radius:50%;background:var(--red);animation:pulse-red 2s ease-in-out infinite; }
-        .admin-close { width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.1);background:transparent;color:var(--gray);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s; }
-        .admin-close:hover { color:var(--white);border-color:rgba(255,255,255,.25); }
-        .admin-tabs { display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap; }
-        .admin-tab { padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,.08);background:transparent;color:var(--gray);transition:all .2s;font-family:var(--font-title); }
-        .admin-tab.active { background:var(--red);color:#fff;border-color:var(--red);box-shadow:0 4px 16px rgba(220,38,38,.3); }
-        .admin-tab:hover:not(.active) { color:var(--white);border-color:rgba(255,255,255,.2); }
+        .admin-profile { display:flex;align-items:center;gap:16px;min-width:0; }
+        .admin-logo {
+          width:56px;height:56px;border-radius:50%;flex-shrink:0;padding:5px;
+          background:linear-gradient(155deg,#1c1414,#090505);
+          box-shadow:6px 6px 14px rgba(0,0,0,.65), -4px -4px 12px rgba(255,255,255,.03), inset 0 0 0 1px rgba(220,38,38,.18);
+        }
+        .admin-logo img { width:100%;height:100%;object-fit:contain;border-radius:50%;display:block; }
+        .admin-greeting { font-family:var(--font-title);font-size:19px;font-weight:800;color:var(--white);line-height:1.2;letter-spacing:-.01em; }
+        .admin-subgreeting { font-size:12px;color:var(--gray);margin-top:3px; }
+        .admin-icon-btn {
+          padding:9px 16px;border-radius:12px;font-size:12px;color:var(--gray);cursor:pointer;
+          font-family:var(--font-title);border:none;background:linear-gradient(155deg,#181111,#0b0707);
+          box-shadow:4px 4px 10px rgba(0,0,0,.6), -3px -3px 8px rgba(255,255,255,.02);
+          transition:color .2s;
+        }
+        .admin-icon-btn:hover { color:#fff; }
+        .admin-close {
+          width:40px;height:40px;border-radius:50%;border:none;color:var(--gray);font-size:16px;cursor:pointer;
+          display:flex;align-items:center;justify-content:center;
+          background:linear-gradient(155deg,#181111,#0b0707);
+          box-shadow:4px 4px 10px rgba(0,0,0,.6), -3px -3px 8px rgba(255,255,255,.02);
+          transition:color .2s;
+        }
+        .admin-close:hover { color:#fff; }
+
+        /* Tabs */
+        .admin-tabs { display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap; }
+        .admin-tab {
+          padding:9px 18px;border-radius:12px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;
+          color:var(--gray);font-family:var(--font-title);transition:all .2s;
+          background:linear-gradient(155deg,#181111,#0b0707);
+          box-shadow:4px 4px 10px rgba(0,0,0,.6), -3px -3px 8px rgba(255,255,255,.02);
+        }
+        .admin-tab.active {
+          color:#fff;background:linear-gradient(155deg,var(--red),var(--red-dark));
+          box-shadow:inset 2px 2px 6px rgba(0,0,0,.35), inset -2px -2px 6px rgba(255,255,255,.08), 5px 5px 14px rgba(220,38,38,.25);
+        }
+        .admin-tab:hover:not(.active) { color:var(--white); }
         .admin-section { display:none; }
         .admin-section.active { display:block; }
-        .admin-stats { display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:24px; }
-        .admin-stat { background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.12);border-radius:14px;padding:18px;text-align:center; }
-        .admin-stat-num { font-family:var(--font-title);font-size:32px;font-weight:800;color:var(--red);line-height:1;margin-bottom:4px; }
-        .admin-stat-label { font-size:11px;color:var(--gray);font-family:var(--font-title);text-transform:uppercase;letter-spacing:.05em; }
-        .reserva-card { background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:16px 18px;margin-bottom:8px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;transition:border-color .2s; }
-        .reserva-card:hover { border-color:rgba(220,38,38,.18); }
+
+        /* Stat cards */
+        .admin-stats { display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:20px; }
+        .admin-stat {
+          border-radius:18px;padding:20px 16px;text-align:center;border:none;
+          background:linear-gradient(155deg,#181111,#0b0707);
+          box-shadow:7px 7px 16px rgba(0,0,0,.6), -5px -5px 14px rgba(255,255,255,.02), inset 0 0 0 1px rgba(220,38,38,.05);
+        }
+        .admin-stat-num { font-family:var(--font-title);font-size:26px;font-weight:800;color:var(--white);line-height:1.15;margin-bottom:5px;letter-spacing:-.01em; }
+        .admin-stat-label { font-size:10.5px;color:var(--gray);font-family:var(--font-title);text-transform:uppercase;letter-spacing:.06em; }
+        .admin-stat.money .admin-stat-num { color:var(--red); }
+
+        /* Gráfico de ingresos mensuales */
+        .admin-chart-card {
+          border-radius:20px;padding:20px 22px;margin-bottom:24px;border:none;
+          background:linear-gradient(155deg,#161010,#0a0707);
+          box-shadow:inset 3px 3px 10px rgba(0,0,0,.5), inset -3px -3px 10px rgba(255,255,255,.015);
+        }
+        .admin-chart { display:flex;align-items:flex-end;gap:16px;height:104px;margin-top:14px;padding:0 8px; }
+        .admin-chart-col { flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0;max-width:90px; }
+        .admin-chart-bar { width:100%;background:linear-gradient(180deg,var(--red),var(--red-dark));border-radius:8px 8px 3px 3px;min-height:4px;transition:height .5s cubic-bezier(.16,1,.3,1); }
+        .admin-chart-val { font-size:12px;color:var(--white);font-weight:700;margin-bottom:6px;font-family:var(--font-title);white-space:nowrap; }
+        .admin-chart-label { font-size:11px;color:var(--gray);margin-top:8px;font-family:var(--font-title);text-transform:capitalize; }
+
+        /* Tabla semanal */
+        .admin-week-table { width:100%;border-collapse:collapse; }
+        .admin-week-table th {
+          text-align:left;font-family:var(--font-title);font-size:10.5px;color:var(--gray);
+          text-transform:uppercase;letter-spacing:.06em;font-weight:700;padding:0 14px 10px;
+        }
+        .admin-week-table td { font-family:var(--font-body);font-size:13.5px;color:rgba(255,255,255,.8);padding:13px 14px; }
+        .admin-week-table tr:not(:last-child) td { border-bottom:1px solid rgba(255,255,255,.04); }
+        .admin-week-table tbody tr { border-radius:12px; }
+        .admin-week-table tbody tr td:first-child { font-family:var(--font-title);font-weight:600;color:var(--white); }
+        .admin-week-today td { color:#fff !important; }
+        .admin-week-total td { font-family:var(--font-title);font-weight:800;color:var(--white) !important;border-top:1px solid rgba(220,38,38,.18);padding-top:16px; }
+        .admin-week-total td:last-child { color:var(--red) !important; }
+        .admin-week-wrap {
+          border-radius:20px;padding:8px 6px;
+          background:linear-gradient(155deg,#161010,#0a0707);
+          box-shadow:inset 3px 3px 10px rgba(0,0,0,.5), inset -3px -3px 10px rgba(255,255,255,.015);
+        }
+
+        /* Reservas / clientes */
+        .reserva-card, .admin-client-card {
+          border-radius:16px;padding:16px 18px;margin-bottom:10px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border:none;
+          background:linear-gradient(155deg,#161010,#0a0707);
+          box-shadow:6px 6px 14px rgba(0,0,0,.55), -4px -4px 12px rgba(255,255,255,.02);
+        }
+        .admin-client-card { align-items:center;flex-wrap:wrap; }
         .reserva-name { font-family:var(--font-title);font-size:14px;font-weight:700;color:var(--white);margin-bottom:3px; }
         .reserva-meta { font-size:12px;color:var(--gray);line-height:1.7; }
         .reserva-meta span { color:rgba(255,255,255,.65); }
-        .reserva-badge { font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;background:rgba(52,211,153,.1);color:rgb(52,211,153);border:1px solid rgba(52,211,153,.2);white-space:nowrap;flex-shrink:0;font-family:var(--font-title); }
-        .reserva-badge.blocked { background:rgba(220,38,38,.1);color:rgba(220,100,100,.9);border-color:rgba(220,38,38,.2); }
-        .btn-admin-cancel { padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid rgba(220,38,38,.25);background:rgba(220,38,38,.08);color:rgba(220,100,100,.9);cursor:pointer;transition:all .2s;font-family:var(--font-title); }
-        .btn-admin-cancel:hover { background:rgba(220,38,38,.2); }
+        .reserva-badge { font-size:11px;font-weight:600;padding:4px 10px;border-radius:8px;background:rgba(255,255,255,.04);color:rgba(255,255,255,.55);white-space:nowrap;flex-shrink:0;font-family:var(--font-title); }
+        .reserva-badge.blocked { color:rgba(220,100,100,.9); }
+        .btn-admin-cancel {
+          padding:7px 15px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;border:none;color:rgba(255,255,255,.75);
+          font-family:var(--font-title);background:linear-gradient(155deg,#1c1010,#0d0606);
+          box-shadow:3px 3px 8px rgba(0,0,0,.6), -2px -2px 6px rgba(255,255,255,.02);
+          transition:color .2s;
+        }
+        .btn-admin-cancel:hover { color:var(--red); }
         .empty-state { text-align:center;padding:48px 20px;color:var(--gray);font-size:14px;font-family:var(--font-title); }
+
+        .admin-client-left { display:flex;align-items:center;gap:12px;min-width:0; }
+        .admin-client-avatar {
+          width:38px;height:38px;border-radius:50%;flex-shrink:0;color:var(--red);
+          font-family:var(--font-title);font-weight:700;font-size:13px;
+          display:flex;align-items:center;justify-content:center;
+          background:linear-gradient(155deg,#1c1010,#0d0606);
+          box-shadow:3px 3px 8px rgba(0,0,0,.6), -2px -2px 6px rgba(255,255,255,.02);
+        }
+        .admin-client-name { font-family:var(--font-title);font-size:14px;font-weight:700;color:var(--white);display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
+        .admin-client-meta { font-size:12px;color:var(--gray);margin-top:3px; }
+        .admin-client-badge { font-size:9.5px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(220,38,38,.12);color:var(--red);white-space:nowrap;font-family:var(--font-title);text-transform:uppercase;letter-spacing:.03em; }
+        .admin-client-right { text-align:right;flex-shrink:0; }
+        .admin-client-spent { font-family:var(--font-title);font-size:15px;font-weight:800;color:var(--white); }
+        .admin-client-visits { font-size:11px;color:var(--gray); }
+
+        .admin-top-row {
+          display:flex;align-items:center;justify-content:space-between;gap:10px;border-radius:14px;padding:13px 16px;margin-bottom:9px;border:none;
+          background:linear-gradient(155deg,#161010,#0a0707);
+          box-shadow:5px 5px 12px rgba(0,0,0,.55), -3px -3px 10px rgba(255,255,255,.02);
+        }
+
+        /* Formularios / botones */
         .admin-bloqueo-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px; }
         @media(max-width:520px){ .admin-bloqueo-grid{grid-template-columns:1fr;} }
-        .admin-input { width:100%;padding:11px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:var(--white);font-size:14px;font-family:var(--font-body);outline:none;transition:border-color .2s; }
-        .admin-input:focus { border-color:rgba(220,38,38,.4); }
-        .admin-input option { background:#111; }
-        .admin-bloqueo-btn { padding:12px 20px;border-radius:10px;background:var(--red);color:#fff;border:none;cursor:pointer;font-family:var(--font-title);font-size:14px;font-weight:600;width:100%;box-shadow:var(--shadow-btn);transition:all .2s;margin-top:4px; }
-        .admin-bloqueo-btn:hover { background:var(--red-dark);transform:translateY(-1px); }
-        .admin-section-title { font-family:var(--font-title);font-size:12px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;margin-top:20px; }
+        .admin-input {
+          width:100%;padding:12px 15px;border-radius:12px;color:var(--white);font-size:14px;
+          font-family:var(--font-body);outline:none;border:none;
+          background:linear-gradient(155deg,#0a0707,#141010);
+          box-shadow:inset 3px 3px 8px rgba(0,0,0,.55), inset -2px -2px 6px rgba(255,255,255,.015);
+        }
+        .admin-input option { background:#141010; }
+        .admin-bloqueo-btn {
+          padding:13px 20px;border-radius:12px;color:#fff;border:none;cursor:pointer;
+          font-family:var(--font-title);font-size:14px;font-weight:700;width:100%;margin-top:4px;
+          background:linear-gradient(155deg,var(--red),var(--red-dark));
+          box-shadow:6px 6px 14px rgba(220,38,38,.22), -3px -3px 10px rgba(255,255,255,.02), inset 0 1px 0 rgba(255,255,255,.08);
+          transition:transform .15s;
+        }
+        .admin-bloqueo-btn:hover { transform:translateY(-1px); }
+        .admin-bloqueo-btn:active { transform:translateY(0);box-shadow:inset 3px 3px 8px rgba(0,0,0,.3), inset -2px -2px 6px rgba(255,255,255,.05); }
+        .admin-section-title { font-family:var(--font-title);font-size:11.5px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;margin-top:22px; }
+
+        /* Login */
         .admin-pwd-wrap { max-width:320px;margin:60px auto;text-align:center; }
         .admin-pwd-title { font-family:var(--font-title);font-size:18px;font-weight:700;color:var(--white);margin-bottom:6px; }
         .admin-pwd-sub { font-size:13px;color:var(--gray);margin-bottom:24px; }
         .admin-pwd-error { color:rgba(220,100,100,.9);font-size:13px;margin-top:10px;display:none; }
-        .admin-open-btn { position:fixed;bottom:110px;right:24px;z-index:200;width:48px;height:48px;border-radius:50%;background:rgba(10,10,10,.9);border:1px solid rgba(255,255,255,.1);color:var(--gray);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.5);transition:all .25s; }
-        .admin-open-btn:hover { color:var(--white);border-color:rgba(220,38,38,.3);background:rgba(30,30,30,.95); }
+
+        .admin-open-btn {
+          position:fixed;bottom:110px;right:24px;z-index:200;width:48px;height:48px;border-radius:50%;
+          color:var(--gray);display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;
+          background:linear-gradient(155deg,#181111,#0a0505);
+          box-shadow:6px 6px 14px rgba(0,0,0,.55), -4px -4px 12px rgba(255,255,255,.02);
+          transition:color .25s;
+        }
+        .admin-open-btn:hover { color:var(--white); }
       `;
       document.head.appendChild(s);
     })();
@@ -4232,23 +4399,30 @@
 
   <div id="admin-panel">
     <div class="admin-wrap">
-      <!-- Pantalla de contraseña -->
+      <!-- Pantalla de acceso -->
       <div id="admin-auth" class="admin-pwd-wrap">
         <div style="font-size:36px;margin-bottom:12px;">🔐</div>
         <div class="admin-pwd-title">Panel de Administración</div>
-        <div class="admin-pwd-sub">Ingresa la clave para continuar</div>
-        <input type="password" id="admin-pwd-input" class="admin-input" placeholder="Contraseña" style="margin-bottom:10px;text-align:center;" onkeydown="if(event.key==='Enter')adminLogin()" />
-        <button class="admin-bloqueo-btn" onclick="adminLogin()">Entrar</button>
-        <div id="admin-pwd-error" class="admin-pwd-error">Contraseña incorrecta</div>
+        <div class="admin-pwd-sub">Inicia sesión para continuar</div>
+        <input type="email" id="admin-email-input" class="admin-input" placeholder="Correo" style="margin-bottom:10px;text-align:center;" autocomplete="username" />
+        <input type="password" id="admin-pwd-input" class="admin-input" placeholder="Contraseña" style="margin-bottom:10px;text-align:center;" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()" />
+        <button class="admin-bloqueo-btn" id="admin-login-btn" onclick="adminLogin()">Entrar</button>
+        <div id="admin-pwd-error" class="admin-pwd-error">Correo o contraseña incorrectos</div>
         <button onclick="adminClose()" style="margin-top:16px;background:transparent;border:none;color:var(--gray);font-size:13px;cursor:pointer;">Cancelar</button>
       </div>
 
       <!-- Contenido del panel (oculto hasta autenticar) -->
       <div id="admin-content" style="display:none;">
         <div class="admin-header">
-          <div class="admin-title"><div class="rdot"></div> Panel IMAC Barber</div>
+          <div class="admin-profile">
+            <div class="admin-logo" id="admin-logo"><img src="data:image/png;base64,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" alt="IMAC Barber" /></div>
+            <div style="min-width:0;">
+              <div class="admin-greeting" id="admin-greeting">Hola de nuevo, Álvaro</div>
+              <div class="admin-subgreeting">Resumen de IMAC Barber</div>
+            </div>
+          </div>
           <div style="display:flex;gap:8px;align-items:center;">
-            <button onclick="adminRefresh()" style="padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:transparent;color:var(--gray);font-size:12px;cursor:pointer;font-family:var(--font-title);transition:all .2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--gray)'">↻ Actualizar</button>
+            <button onclick="adminRefresh()" class="admin-icon-btn">↻ Actualizar</button>
             <button class="admin-close" onclick="adminClose()">✕</button>
           </div>
         </div>
@@ -4256,14 +4430,41 @@
         <!-- Stats -->
         <div class="admin-stats" id="admin-stats-row"></div>
 
+        <!-- Gráfico de ingresos mensuales -->
+        <div class="admin-chart-card">
+          <div class="admin-section-title" style="margin-top:0;">Ingresos mensuales · últimos 3 meses</div>
+          <div class="admin-chart" id="admin-chart"></div>
+        </div>
+
         <!-- Tabs -->
         <div class="admin-tabs">
-          <button class="admin-tab active" onclick="adminTab('reservas',this)">📋 Reservas</button>
-          <button class="admin-tab" onclick="adminTab('bloquear',this)">🚫 Bloquear Horario</button>
+          <button class="admin-tab active" onclick="adminTab('resumen',this)">📊 Resumen</button>
+          <button class="admin-tab" onclick="adminTab('semana',this)">📅 Semana</button>
+          <button class="admin-tab" onclick="adminTab('clientes',this)">👥 Clientes</button>
+          <button class="admin-tab" onclick="adminTab('reservas',this)">📋 Reservas</button>
+          <button class="admin-tab" onclick="adminTab('bloquear',this)">🚫 Bloquear</button>
+          <button class="admin-tab" onclick="adminTab('perfil',this)">⚙️ Perfil</button>
+        </div>
+
+        <!-- Tab: Resumen -->
+        <div class="admin-section active" id="atab-resumen">
+          <div class="admin-section-title" style="margin-top:0;">Clientes que más piden turno</div>
+          <div id="admin-top-clientes"></div>
+        </div>
+
+        <!-- Tab: Semana -->
+        <div class="admin-section" id="atab-semana">
+          <div class="admin-section-title" style="margin-top:0;">Cortes e ingresos por día · esta semana</div>
+          <div class="admin-week-wrap" id="admin-semana-table"></div>
+        </div>
+
+        <!-- Tab: Clientes -->
+        <div class="admin-section" id="atab-clientes">
+          <div id="admin-clientes-list"></div>
         </div>
 
         <!-- Tab: Reservas -->
-        <div class="admin-section active" id="atab-reservas">
+        <div class="admin-section" id="atab-reservas">
           <div id="admin-reservas-list"></div>
         </div>
 
@@ -4302,13 +4503,34 @@
           <div class="admin-section-title" style="margin-top:28px;">Horarios bloqueados manualmente</div>
           <div id="admin-bloqueados-list"></div>
         </div>
+
+        <!-- Tab: Perfil -->
+        <div class="admin-section" id="atab-perfil">
+          <p style="font-size:13px;color:var(--gray);margin-bottom:20px;">Personaliza el nombre que aparece en el saludo del panel.</p>
+          <div class="admin-section-title" style="margin-top:0;">Tu nombre</div>
+          <input type="text" id="perfil-nombre-input" class="admin-input" placeholder="Ej: Álvaro" style="margin-bottom:14px;" />
+          <button class="admin-bloqueo-btn" onclick="adminGuardarPerfil()">Guardar cambios</button>
+
+          <div class="admin-section-title">Mantenimiento (una sola vez)</div>
+          <p style="font-size:12px;color:var(--gray);margin-bottom:12px;">Si acabas de activar el nuevo sistema de seguridad, usa esto una vez para que tus citas ya agendadas sigan bloqueando el horario en la web pública.</p>
+          <button class="admin-bloqueo-btn" style="background:transparent;border:1px solid rgba(255,255,255,.15);" onclick="adminSincronizarDisponibilidad()">🔄 Sincronizar disponibilidad</button>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
-    const ADMIN_PWD = 'imac2025';
     let _adminAuth = false;
+    let _perfilNombre = 'Álvaro';
+
+    // ── Sanitiza cualquier texto antes de insertarlo como HTML ──
+    // (evita que un nombre/teléfono escrito por un cliente en el formulario
+    // de reserva pueda inyectar HTML/JS dentro del panel del admin)
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str == null ? '' : String(str);
+      return div.innerHTML;
+    }
 
     function adminOpen() {
       document.getElementById('admin-panel').classList.add('open');
@@ -4325,19 +4547,33 @@
       document.getElementById('admin-panel').classList.remove('open');
     }
 
-    function adminLogin() {
-      const val = document.getElementById('admin-pwd-input').value;
-      if (val === ADMIN_PWD) {
+    async function adminLogin() {
+      const email = document.getElementById('admin-email-input').value.trim();
+      const pwd = document.getElementById('admin-pwd-input').value;
+      const btn = document.getElementById('admin-login-btn');
+      if (!email || !pwd) {
+        document.getElementById('admin-pwd-error').textContent = 'Escribe tu correo y contraseña.';
+        document.getElementById('admin-pwd-error').style.display = 'block';
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = 'Entrando...';
+      try {
+        _adminIdToken = await fbSignIn(email, pwd);
         _adminAuth = true;
         document.getElementById('admin-pwd-error').style.display = 'none';
         document.getElementById('admin-auth').style.display = 'none';
         document.getElementById('admin-content').style.display = 'block';
         document.getElementById('admin-pwd-input').value = '';
         adminRefresh();
-      } else {
+      } catch (e) {
+        document.getElementById('admin-pwd-error').textContent = 'Correo o contraseña incorrectos.';
         document.getElementById('admin-pwd-error').style.display = 'block';
         document.getElementById('admin-pwd-input').value = '';
         document.getElementById('admin-pwd-input').focus();
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Entrar';
       }
     }
 
@@ -4349,42 +4585,238 @@
     }
 
     async function adminRefresh() {
-      await loadReservas();
+      await Promise.all([loadReservasAdmin(), loadDisponibilidad(), loadPerfil()]);
+      renderAdminPerfil();
       renderAdminStats();
+      renderAdminChart();
+      renderAdminTopClientes();
+      renderAdminSemana();
+      renderAdminClientes();
       renderAdminReservas();
       renderAdminBloqueados();
     }
 
-    function renderAdminStats() {
-      let totalReservas = 0, hoy = 0, proximas = 0;
-      const todayKey = new Date().toISOString().split('T')[0];
+    // ── Perfil (nombre del barbero) — guardado en Firebase en /perfil ──
+    async function loadPerfil() {
+      const p = await fbGet('/perfil');
+      if (p && p.nombre) _perfilNombre = p.nombre;
+    }
+
+    async function adminGuardarPerfil() {
+      const val = document.getElementById('perfil-nombre-input').value.trim();
+      if (!val) { showToast('Escribe un nombre.'); return; }
+      await fbSet('/perfil', { nombre: val }, true);
+      _perfilNombre = val;
+      renderAdminPerfil();
+      showToast('Perfil actualizado.');
+    }
+
+    function renderAdminPerfil() {
+      document.getElementById('admin-greeting').textContent = 'Hola de nuevo, ' + _perfilNombre;
+      const input = document.getElementById('perfil-nombre-input');
+      if (input && !input.value) input.value = _perfilNombre;
+    }
+
+    // ── Helpers de datos: precio y nombre base de un servicio ──
+    // El servicio se guarda como "✂️ BÁSICO · $20.000" — de ahí sacamos el precio.
+    function parsePrice(servicioStr) {
+      if (!servicioStr) return 0;
+      const m = String(servicioStr).match(/\$([\d.,]+)/);
+      if (!m) return 0;
+      return parseInt(m[1].replace(/[.,]/g, ''), 10) || 0;
+    }
+    function baseServiceName(servicioStr) {
+      if (!servicioStr) return 'Otro';
+      return String(servicioStr).split('·')[0].trim();
+    }
+    function todosLosTurnos() {
+      // Aplana _reservas en una lista de objetos { dk, t, tk, nombre, telefono, servicio, ... }
+      let out = [];
       Object.entries(_reservas).forEach(([dk, slots]) => {
-        Object.keys(slots).forEach(() => {
-          totalReservas++;
-          if (dk === todayKey) hoy++;
-          if (dk >= todayKey) proximas++;
+        Object.entries(slots).forEach(([tk, data]) => {
+          out.push({ dk, t: tk.replace('_', ':'), tk, ...data });
         });
       });
-      let bloqueados = 0;
-      Object.values(_bloqueados).forEach(s => bloqueados += Object.keys(s).length);
+      return out;
+    }
+
+    function renderAdminStats() {
+      const entries = todosLosTurnos();
+      const now = new Date();
+      const todayKey = now.toISOString().split('T')[0];
+      const cutoff = new Date(now);
+      cutoff.setDate(cutoff.getDate() - 90);
+      const cutoffKey = cutoff.toISOString().split('T')[0];
+
+      let hoy = 0, ingresos90 = 0;
+      const clientesSet = new Set();
+      const servicioCount = {};
+
+      entries.forEach(e => {
+        if (e.dk === todayKey) hoy++;
+        if (e.dk >= cutoffKey && e.dk <= todayKey) {
+          ingresos90 += parsePrice(e.servicio);
+          clientesSet.add((e.telefono || e.nombre || '').trim());
+          const svc = baseServiceName(e.servicio);
+          servicioCount[svc] = (servicioCount[svc] || 0) + 1;
+        }
+      });
+
+      let servicioTop = '—';
+      let max = 0;
+      Object.entries(servicioCount).forEach(([svc, count]) => {
+        if (count > max) { max = count; servicioTop = svc; }
+      });
+
+      const promedioMensual = Math.round(ingresos90 / 3);
+      const fmt = n => '$' + n.toLocaleString('es-CO');
+
       document.getElementById('admin-stats-row').innerHTML = `
-        <div class="admin-stat"><div class="admin-stat-num">${totalReservas}</div><div class="admin-stat-label">Total</div></div>
-        <div class="admin-stat"><div class="admin-stat-num">${hoy}</div><div class="admin-stat-label">Hoy</div></div>
-        <div class="admin-stat"><div class="admin-stat-num">${proximas}</div><div class="admin-stat-label">Próximas</div></div>
-        <div class="admin-stat"><div class="admin-stat-num">${bloqueados}</div><div class="admin-stat-label">Bloqueados</div></div>
+        <div class="admin-stat money"><div class="admin-stat-num">${fmt(ingresos90)}</div><div class="admin-stat-label">Ingresos · 90 días</div></div>
+        <div class="admin-stat money"><div class="admin-stat-num">${fmt(promedioMensual)}</div><div class="admin-stat-label">Promedio mensual aprox.</div></div>
+        <div class="admin-stat"><div class="admin-stat-num">${clientesSet.size}</div><div class="admin-stat-label">Clientes · 90 días</div></div>
+        <div class="admin-stat"><div class="admin-stat-num">${hoy}</div><div class="admin-stat-label">Citas hoy</div></div>
+        <div class="admin-stat"><div class="admin-stat-num" style="font-size:14px;line-height:1.3;padding-top:6px;">${escapeHtml(servicioTop)}</div><div class="admin-stat-label">Servicio top</div></div>
       `;
+    }
+
+    function renderAdminChart() {
+      const entries = todosLosTurnos();
+      const now = new Date();
+      const months = [];
+      for (let i = 2; i >= 0; i--) {
+        months.push(new Date(now.getFullYear(), now.getMonth() - i, 1));
+      }
+      const totals = months.map(m => {
+        const mk = m.getFullYear() + '-' + String(m.getMonth() + 1).padStart(2, '0');
+        return entries.filter(e => e.dk.slice(0, 7) === mk).reduce((s, e) => s + parsePrice(e.servicio), 0);
+      });
+      const max = Math.max(...totals, 1);
+      const chart = document.getElementById('admin-chart');
+      chart.innerHTML = months.map((m, i) => {
+        const label = m.toLocaleDateString('es-CO', { month: 'short' }).replace('.', '');
+        const h = Math.round((totals[i] / max) * 100);
+        return `<div class="admin-chart-col">
+          <div class="admin-chart-val">$${totals[i].toLocaleString('es-CO')}</div>
+          <div class="admin-chart-bar" style="height:${h}%"></div>
+          <div class="admin-chart-label">${label}</div>
+        </div>`;
+      }).join('');
+    }
+
+    // ── Tabla semanal: cortes e ingresos exactos por día (Lunes a Domingo, semana actual) ──
+    function renderAdminSemana() {
+      const entries = todosLosTurnos();
+      const now = new Date();
+      const todayKey = now.toISOString().split('T')[0];
+      const dow = now.getDay(); // 0=Domingo ... 6=Sábado
+      const diffToMonday = dow === 0 ? -6 : 1 - dow;
+      const monday = new Date(now);
+      monday.setDate(now.getDate() + diffToMonday);
+
+      const nombres = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+      let totalCortes = 0, totalIngresos = 0;
+
+      const filas = nombres.map((nombre, i) => {
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        const dk = d.toISOString().split('T')[0];
+        const delDia = entries.filter(e => e.dk === dk);
+        const cortes = delDia.length;
+        const ingresos = delDia.reduce((s, e) => s + parsePrice(e.servicio), 0);
+        totalCortes += cortes;
+        totalIngresos += ingresos;
+        const esHoy = dk === todayKey;
+        return `<tr class="${esHoy ? 'admin-week-today' : ''}">
+          <td>${nombre}${esHoy ? ' <span class="admin-client-badge">Hoy</span>' : ''}</td>
+          <td style="text-align:center">${cortes}</td>
+          <td style="text-align:right">$${ingresos.toLocaleString('es-CO')}</td>
+        </tr>`;
+      }).join('');
+
+      document.getElementById('admin-semana-table').innerHTML = `
+        <table class="admin-week-table">
+          <thead><tr><th>Día</th><th style="text-align:center">Cortes</th><th style="text-align:right">Ingresos</th></tr></thead>
+          <tbody>
+            ${filas}
+            <tr class="admin-week-total"><td>Total semana</td><td style="text-align:center">${totalCortes}</td><td style="text-align:right">$${totalIngresos.toLocaleString('es-CO')}</td></tr>
+          </tbody>
+        </table>
+      `;
+    }
+
+    // ── Agrupa reservas por cliente (usando el teléfono como identificador) ──
+    function buildClientesMap() {
+      const entries = todosLosTurnos();
+      const map = {};
+      entries.forEach(e => {
+        const key = (e.telefono || e.nombre || 'desconocido').trim();
+        if (!map[key]) {
+          map[key] = { nombre: e.nombre || 'Cliente', telefono: e.telefono || '—', visitas: 0, gastado: 0, servicios: {}, ultima: e.dk };
+        }
+        map[key].visitas++;
+        map[key].gastado += parsePrice(e.servicio);
+        const svc = baseServiceName(e.servicio);
+        map[key].servicios[svc] = (map[key].servicios[svc] || 0) + 1;
+        if (e.dk > map[key].ultima) map[key].ultima = e.dk;
+      });
+      return Object.values(map).map(c => {
+        let favorito = '—', max = 0;
+        Object.entries(c.servicios).forEach(([svc, count]) => { if (count > max) { max = count; favorito = svc; } });
+        return { ...c, favorito };
+      });
+    }
+
+    function renderAdminTopClientes() {
+      const clientes = buildClientesMap().sort((a, b) => b.gastado - a.gastado).slice(0, 5);
+      const cont = document.getElementById('admin-top-clientes');
+      if (!clientes.length) {
+        cont.innerHTML = '<div class="empty-state" style="padding:24px 0;">Aún no hay suficientes datos.</div>';
+        return;
+      }
+      cont.innerHTML = clientes.map((c, i) => `
+        <div class="admin-top-row">
+          <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+            <span style="font-family:var(--font-title);font-weight:800;color:var(--red);">#${i + 1}</span>
+            <span style="font-family:var(--font-title);font-weight:700;color:var(--white);">${escapeHtml(c.nombre)}</span>
+            ${c.visitas >= 2 ? '<span class="admin-client-badge">Frecuente</span>' : ''}
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div class="admin-client-spent">$${c.gastado.toLocaleString('es-CO')}</div>
+            <div class="admin-client-visits">${c.visitas} visita${c.visitas === 1 ? '' : 's'}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderAdminClientes() {
+      const clientes = buildClientesMap().sort((a, b) => b.gastado - a.gastado);
+      const list = document.getElementById('admin-clientes-list');
+      if (!clientes.length) {
+        list.innerHTML = '<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>Aún no hay clientes registrados</div>';
+        return;
+      }
+      list.innerHTML = clientes.map(c => `
+        <div class="admin-client-card">
+          <div class="admin-client-left">
+            <div class="admin-client-avatar">${escapeHtml((c.nombre || '?').trim().charAt(0).toUpperCase())}</div>
+            <div style="min-width:0;">
+              <div class="admin-client-name">${escapeHtml(c.nombre)} ${c.visitas >= 2 ? '<span class="admin-client-badge">Frecuente</span>' : ''}</div>
+              <div class="admin-client-meta">📞 ${escapeHtml(c.telefono)} &nbsp;·&nbsp; ✂️ ${escapeHtml(c.favorito)} &nbsp;·&nbsp; última visita: ${escapeHtml(c.ultima)}</div>
+            </div>
+          </div>
+          <div class="admin-client-right">
+            <div class="admin-client-spent">$${c.gastado.toLocaleString('es-CO')}</div>
+            <div class="admin-client-visits">${c.visitas} visita${c.visitas === 1 ? '' : 's'}</div>
+          </div>
+        </div>
+      `).join('');
     }
 
     function renderAdminReservas() {
       const list = document.getElementById('admin-reservas-list');
       const todayKey = new Date().toISOString().split('T')[0];
-      let entries = [];
-      Object.entries(_reservas).forEach(([dk, slots]) => {
-        Object.entries(slots).forEach(([tk, data]) => {
-          const t = tk.replace('_', ':');
-          entries.push({ dk, t, tk, ...data });
-        });
-      });
+      let entries = todosLosTurnos();
       entries.sort((a, b) => (b.dk + b.t).localeCompare(a.dk + a.t));
       if (!entries.length) {
         list.innerHTML = '<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>No hay reservas aún</div>';
@@ -4395,12 +4827,12 @@
         const badge = isPast ? '<span class="reserva-badge" style="background:rgba(255,255,255,.05);color:rgba(255,255,255,.3);border-color:rgba(255,255,255,.08);">Pasada</span>' : '<span class="reserva-badge">✓ Confirmada</span>';
         return `<div class="reserva-card">
           <div style="flex:1;min-width:0">
-            <div class="reserva-name">${e.nombre}</div>
+            <div class="reserva-name">${escapeHtml(e.nombre)}</div>
             <div class="reserva-meta">
-              📞 <span>${e.telefono}</span> &nbsp;·&nbsp;
-              ✂️ <span>${e.servicio}</span><br>
-              📅 <span>${e.fechaStr || e.dk}</span> &nbsp;·&nbsp;
-              🕐 <span>${e.horaStr || to12h(e.t)}</span>
+              📞 <span>${escapeHtml(e.telefono)}</span> &nbsp;·&nbsp;
+              ✂️ <span>${escapeHtml(e.servicio)}</span><br>
+              📅 <span>${escapeHtml(e.fechaStr || e.dk)}</span> &nbsp;·&nbsp;
+              🕐 <span>${escapeHtml(e.horaStr || to12h(e.t))}</span>
             </div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0">
@@ -4429,7 +4861,7 @@
         <div class="reserva-card">
           <div style="flex:1">
             <div class="reserva-name">🚫 Horario bloqueado</div>
-            <div class="reserva-meta">📅 <span>${e.dk}</span> &nbsp;·&nbsp; 🕐 <span>${to12h(e.t)}</span></div>
+            <div class="reserva-meta">📅 <span>${escapeHtml(e.dk)}</span> &nbsp;·&nbsp; 🕐 <span>${escapeHtml(to12h(e.t))}</span></div>
           </div>
           <button class="btn-admin-cancel" onclick="adminDesbloquear('${e.dk}','${e.t}')">Liberar</button>
         </div>`).join('');
@@ -4438,14 +4870,18 @@
     async function adminCancelarReserva(dk, t) {
       if (!confirm('¿Cancelar esta reserva y liberar el horario?')) return;
       const tk = t.replace(':', '_');
-      // Eliminar la reserva Y el bloqueo correspondiente (si existe)
+      // Eliminar la reserva, el "ocupado" público y el bloqueo correspondiente (si existe)
       await Promise.all([
-        fbDelete('/reservas/' + dk + '/' + tk),
-        fbDelete('/bloqueados/' + dk + '/' + tk)
+        fbDelete('/reservas/' + dk + '/' + tk, true),
+        fbDelete('/ocupados/' + dk + '/' + tk, true),
+        fbDelete('/bloqueados/' + dk + '/' + tk, true)
       ]);
-      await loadReservas();
+      await Promise.all([loadReservasAdmin(), loadDisponibilidad()]);
       showToast('Reserva cancelada y horario liberado.');
       renderAdminStats();
+      renderAdminChart();
+      renderAdminTopClientes();
+      renderAdminClientes();
       renderAdminReservas();
       renderAdminBloqueados();
     }
@@ -4455,10 +4891,10 @@
       const hora = document.getElementById('bloqueo-hora').value;
       if (!fecha || !hora) { showToast('Selecciona fecha y hora.'); return; }
       const tk = hora.replace(':', '_');
-      await loadReservas();
+      await loadDisponibilidad();
       if (isSlotBooked(fecha, hora)) { showToast('Este horario ya está ocupado o bloqueado.'); return; }
-      await fbSet('/bloqueados/' + fecha + '/' + tk, true);
-      await loadReservas();
+      await fbSet('/bloqueados/' + fecha + '/' + tk, true, true);
+      await loadDisponibilidad();
       showToast('Horario bloqueado correctamente.');
       document.getElementById('bloqueo-fecha').value = '';
       document.getElementById('bloqueo-hora').value = '';
@@ -4468,29 +4904,30 @@
 
     async function adminDesbloquear(dk, t) {
       const tk = t.replace(':', '_');
-      await fbDelete('/bloqueados/' + dk + '/' + tk);
-      await loadReservas();
+      await fbDelete('/bloqueados/' + dk + '/' + tk, true);
+      await loadDisponibilidad();
       showToast('Horario liberado.');
       renderAdminStats();
       renderAdminBloqueados();
+    }
+
+    // ── Migración única: crea /ocupados a partir de las reservas ya existentes ──
+    // Necesaria solo la primera vez tras activar el nuevo modelo de datos, para
+    // que las citas ya agendadas antes del cambio sigan bloqueando el horario
+    // en el calendario público (que ahora solo lee /ocupados, no /reservas).
+    async function adminSincronizarDisponibilidad() {
+      if (!confirm('Esto revisará todas tus reservas guardadas y marcará esos horarios como ocupados en el calendario público. ¿Continuar?')) return;
+      await loadReservasAdmin();
+      const entries = todosLosTurnos();
+      await Promise.all(entries.map(e => fbSet('/ocupados/' + e.dk + '/' + e.tk, true, true)));
+      await loadDisponibilidad();
+      showToast('Disponibilidad sincronizada: ' + entries.length + ' horario(s) revisados.');
     }
 
     // Setear fecha mínima en bloqueo
     const bloqueoFecha = document.getElementById('bloqueo-fecha');
     if (bloqueoFecha) bloqueoFecha.min = new Date().toISOString().split('T')[0];
     // Firebase listener ya carga los datos automáticamente al conectar
-
-    // Deshabilitar clic derecho / atajos de inspección
-    document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
-    document.addEventListener('keydown', function (e) {
-      if (
-        e.key === 'F12' ||
-        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
-        (e.ctrlKey && e.key === 'U')
-      ) {
-        e.preventDefault();
-      }
-    });
   </script>
 
 </body>
